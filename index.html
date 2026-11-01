@@ -219,10 +219,10 @@ footer{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 0 8px}
   <section id="viewLookup" hidden>
     <form class="lookup" id="lookupForm" novalidate>
       <div class="box form">
-        <h3 style="margin:0">輸入下單時填的電話和 LINE ID</h3>
+        <h3 style="margin:0">輸入下單時填的電話和 LINE 名稱</h3>
         <div class="row2">
           <div class="field"><label for="lkPhone">手機號碼</label><input id="lkPhone" inputmode="numeric" autocomplete="tel" placeholder="0912345678"></div>
-          <div class="field"><label for="lkLine">LINE ID</label><input id="lkLine" autocomplete="off" autocapitalize="off" placeholder="你的 LINE ID"></div>
+          <div class="field"><label for="lkLine">LINE 名稱</label><input id="lkLine" autocomplete="off" autocapitalize="off" placeholder="LINE 上顯示的名稱"></div>
         </div>
         <button class="btn pine block" id="lkBtn" type="submit">查詢訂單</button>
       </div>
@@ -307,7 +307,7 @@ async function api(action, payload = {}) {
 function demoApi(action, p) {
   const orders = store.get('xmas-demo-orders', []);
   const save = () => store.set('xmas-demo-orders', orders);
-  const np = s => String(s||'').replace(/\D/g,''), nl = s => String(s||'').trim().replace(/^@/,'').toLowerCase();
+  const np = s => String(s||'').replace(/\D/g,''), nl = s => String(s||'').replace(/\s+/g,'').toLowerCase();
   const sold = ex => { const m = {}; orders.filter(o => o.status==='有效' && o.id!==ex).forEach(o => o.items.forEach(i => m[i.id]=(m[i.id]||0)+i.qty)); return m; };
   return new Promise(resolve => setTimeout(() => {
     if (action === 'catalog') {
@@ -518,7 +518,7 @@ function openDetail(id) {
 const FIELDS = [
   ['name','姓名','text','name','王小明'],
   ['nick','社群暱稱','text','nickname','在 LINE 群裡的暱稱'],
-  ['lineId','LINE ID','text','off','你的 LINE ID'],
+  ['lineId','LINE 名稱','text','off','LINE 上顯示的名稱'],
   ['phone','手機號碼','tel','tel','0912345678'],
 ];
 function orderBoxHtml(lines) {
@@ -556,7 +556,7 @@ $('#checkoutBtn').onclick = () => {
       <div class="hp" aria-hidden="true"><input id="f_website" name="website" tabindex="-1" autocomplete="off"></div>
       <div id="formErr"></div>
       <button class="btn block" type="submit" id="submitBtn">${S.editing ? '送出修改' : '送出訂單'}</button>
-      <div class="hint" style="text-align:center">送出後可以在「查詢訂單」用電話和 LINE ID 修改或取消</div>
+      <div class="hint" style="text-align:center">送出後可以在「查詢訂單」用電話和 LINE 名稱 修改或取消</div>
     </form>`);
   const form = $('#orderForm');
   form.addEventListener('input', () => { if (!S.editing) store.set('xmas-profile', readForm(form)); });
@@ -570,7 +570,7 @@ function validate(o) {
   const err = {};
   if (!o.name) err.name = '請填寫姓名';
   if (!o.nick) err.nick = '請填寫社群暱稱，方便團主對照';
-  if (!o.lineId) err.lineId = '請填寫 LINE ID';
+  if (!o.lineId) err.lineId = '請填寫 LINE 名稱';
   const ph = o.phone.replace(/\D/g, '');
   if (!/^09\d{8}$/.test(ph)) err.phone = '請填 09 開頭的 10 碼手機號碼';
   if (!o.store) err.store = '請填寫取貨門市';
@@ -629,7 +629,7 @@ function showDone(o, wasEdit) {
 $('#lookupForm').addEventListener('submit', async e => {
   e.preventDefault();
   const phone = $('#lkPhone').value.replace(/\D/g,''), lineId = $('#lkLine').value.trim();
-  if (!phone || !lineId) { $('#lookupResult').innerHTML = '<div class="formerr">請輸入電話和 LINE ID</div>'; return; }
+  if (!phone || !lineId) { $('#lookupResult').innerHTML = '<div class="formerr">請輸入電話和 LINE 名稱</div>'; return; }
   S.lookup = { phone, lineId };
   await doLookup();
 });
@@ -639,7 +639,7 @@ async function doLookup() {
   const r = await api('lookup', S.lookup);
   btn.disabled = false; btn.textContent = '查詢訂單';
   if (!r.ok) { out.innerHTML = `<div class="formerr">${esc(r.error)}</div>`; return; }
-  if (!r.orders.length) { out.innerHTML = '<p class="empty">找不到訂單。請確認電話和 LINE ID 是否和下單時一樣。</p>'; return; }
+  if (!r.orders.length) { out.innerHTML = '<p class="empty">找不到訂單。請確認電話和 LINE 名稱 是否和下單時一樣。</p>'; return; }
   S.lookupOrders = r.orders;
   out.innerHTML = r.orders.map(o => {
     const active = o.status === '有效', canEdit = active && !o.paid && S.settings.isOpen;
