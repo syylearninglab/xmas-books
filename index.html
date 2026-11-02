@@ -96,6 +96,9 @@ button{cursor:pointer}
 .pub span+span::before{content:"·";margin-right:6px}
 .title{font-weight:700;font-size:14.5px;line-height:1.45;margin:0}
 .tagline{font-size:12.5px;color:var(--gold);font-weight:500}
+.badge{align-self:flex-start;display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--berry-soft);color:var(--berry)}
+.badge.t-buy{background:var(--gold-soft);color:var(--gold)}
+.badge.t-new{background:var(--pine-soft);color:var(--pine)}
 .prices{display:flex;align-items:baseline;gap:8px;margin-top:auto;padding-top:6px;flex-wrap:wrap}
 .price{color:var(--berry);font-weight:700;font-size:20px}
 .price small{font-size:13px;margin-right:1px}
@@ -210,6 +213,7 @@ footer{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 0 8px}
   <section id="viewShop">
     <div class="chips" id="pubChips" role="group" aria-label="出版社"></div>
     <div class="chips" id="catChips" role="group" aria-label="分類"></div>
+    <div class="chips" id="tagChips" role="group" aria-label="標籤"></div>
     <div id="promo"></div>
     <div class="grid" id="grid">
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
@@ -254,21 +258,23 @@ const CONFIG = {
 
 /* 預覽模式用的示範資料（正式上線後書單改由 Google 試算表提供） */
 const DEMO = {
-  settings: { title: '聖誕選書團購', notice: '這是預覽畫面。原價、限量數字都是示意，正式版會讀取你在 Google 試算表填的內容。',
+  settings: { title: '聖誕選書團購', notice: '這是預覽畫面，書單取自選書規劃表的其中 12 本；「雪人」限量 5 本是示意。正式版會讀取你在 Google 試算表填的內容。',
     open: true, isOpen: true, deadline: '', threshold: 0, rate: 0, minus: 0, perMax: 10 },
   books: [
-    ['B001','風車－聖誕手提有聲書：快樂過聖誕','風車','有聲書',310,245,0,'按按就會唱，手提出門好方便'],
-    ['B002','歡樂聖誕歌謠（新版）','','有聲書',460,364,0,''],
-    ['B003','聖誕立體翻翻書：叮叮噹！閃亮聖誕節','','操作書',242,191,0,''],
-    ['B004','小手按按有聲書：聖誕歌謠','','有聲書',242,191,0,''],
-    ['B005','魔法推拉轉：歡樂過聖誕','','操作書',242,191,0,''],
-    ['B006','來玩躲貓貓：聖誕老公公（硬頁操作遊戲書）','','操作書',305,241,0,''],
-    ['B007','聖誕老公公是怎麼鑽進煙囪的？','','繪本',328,259,0,''],
-    ['B008','雪人（45周年特別紀念版）','','繪本',280,221,5,'經典無字繪本'],
-    ['B009','100個耶誕老公公（10週年紀念版）','','繪本',306,242,0,''],
-    ['B010','小火車，耶誕快樂！','','繪本',328,259,0,''],
+    ['B002','歡樂聖誕歌謠（新版）','風車','有聲書',560,386,0,'8 首聖誕歌謠＋鈴鼓聲','去年熱賣'],
+    ['B019','碰一下！這是什麼感覺？這不是我的聖誕樹！','禾流','操作書',600,414,0,'5 種觸感＋燈光特效','去年熱賣'],
+    ['B020','有音樂的聖誕樹！','禾流','有聲書',350,241,0,'按下按鈕播放〈聖誕鈴聲〉','去年熱賣'],
+    ['B024','威力降臨曆','禾流','降臨曆',1500,1035,0,'12 月每天拆一格','團友熱購'],
+    ['B031','CollectA 聖誕倒數月曆－森林野生動物','小牛津','倒數月曆',950,656,0,'24 隻高擬真動物模型','團友熱購'],
+    ['B008','雪人（45周年特別紀念版）','信誼','繪本',320,221,5,'經典無字繪本','團友熱購'],
+    ['B007','聖誕老公公是怎麼鑽進煙囪的？','上誼','繪本',380,262,0,'',''],
+    ['B009','100個耶誕老公公（10週年紀念版）','小天下','繪本',350,241,0,'隨書贈耶誕倒數戳戳月曆','團友熱購'],
+    ['B012','Jolly歡樂過聖誕音效有聲書','風車','有聲書',450,311,0,'52 種聖誕情境音效','新書'],
+    ['B035','小老鼠的閃亮聖誕夜（燈泡書）','采實','燈泡書',450,311,0,'書裡有會亮的燈泡','團友熱購'],
+    ['B047','聖誕老爸（三版）','格林','繪本',350,241,0,'《雪人》作者雷蒙．布力格',''],
+    ['B015','聖誕老公公：聖誕魔法著色本','風車','遊戲書',126,87,0,'百元內的小禮物','交換禮物'],
   ].map(r => ({ id:r[0], title:r[1], publisher:r[2], category:r[3], list:r[4], price:r[5], limit:r[6], remaining:r[6]||null,
-    tagline:r[7], age:'', desc:'', cover:'' })),
+    tagline:r[7], tag:r[8], age:'', desc:'', cover:'' })),
 };
 
 /* ======================= 狀態 ======================= */
@@ -276,7 +282,7 @@ const S = {
   settings: null, books: [], byId: {},
   cart: {},            // {書號: 數量}
   editing: null,       // {orderId, phone, lineId, prev:{書號:數量}}
-  pub: '全部', cat: '全部',
+  pub: '全部', cat: '全部', tag: '全部',
   lookup: null,        // {phone, lineId}
 };
 const $ = s => document.querySelector(s);
@@ -381,6 +387,10 @@ function coverHtml(b) {
 }
 window.phFor = id => placeholder(S.byId[id]);
 
+const TAG_STYLE = { '去年熱賣': ['🔥',''], '團友熱購': ['⭐','t-buy'], '新書': ['✨','t-new'], '交換禮物': ['🎁','t-new'] };
+const tagIcon = t => (TAG_STYLE[t] || ['🏷️'])[0];
+const badge = b => b.tag ? `<span class="badge ${(TAG_STYLE[b.tag]||[])[1]||''}">${tagIcon(b.tag)} ${esc(b.tag)}</span>` : '';
+
 function renderChips() {
   const pubs = [...new Set(S.books.map(b => b.publisher).filter(Boolean))];
   const cats = [...new Set(S.books.map(b => b.category).filter(Boolean))];
@@ -389,12 +399,15 @@ function renderChips() {
   $('#pubChips').hidden = pubs.length <= 1;
   $('#catChips').innerHTML = cats.length > 1 ? ['全部', ...cats].map(v => chip('cat', v)).join('') : '';
   $('#catChips').hidden = cats.length <= 1;
+  const tags = [...new Set(S.books.map(b => b.tag).filter(Boolean))];
+  $('#tagChips').innerHTML = tags.length ? ['全部', ...tags].map(v => chip('tag', v).replace('>'+esc(v)+'<', '>'+(v==='全部'?'全部標籤':tagIcon(v)+' '+esc(v))+'<')).join('') : '';
+  $('#tagChips').hidden = !tags.length;
   const p = promoText();
   $('#promo').innerHTML = p ? `<div class="promo">🎁 滿額優惠：${esc(p)}，結帳時自動折扣</div>` : '';
 }
 
 function renderGrid() {
-  const list = S.books.filter(b => (S.pub === '全部' || b.publisher === S.pub) && (S.cat === '全部' || b.category === S.cat));
+  const list = S.books.filter(b => (S.pub === '全部' || b.publisher === S.pub) && (S.cat === '全部' || b.category === S.cat) && (S.tag === '全部' || b.tag === S.tag));
   if (!list.length) { $('#grid').innerHTML = '<p class="empty" style="grid-column:1/-1">這個分類目前沒有書</p>'; return; }
   const canOrder = S.settings.isOpen;
   $('#grid').innerHTML = list.map(b => {
@@ -412,6 +425,7 @@ function renderGrid() {
       <button class="cover" data-detail="${esc(b.id)}" aria-label="查看 ${esc(b.title)}">${coverHtml(b)}${z?`<span class="tagzhe">${z}</span>`:''}${left}</button>
       <div class="info">
         <div class="pub">${b.publisher?`<span>${esc(b.publisher)}</span>`:''}${b.category?`<span>${esc(b.category)}</span>`:''}${b.age?`<span>${esc(b.age)}</span>`:''}</div>
+        ${badge(b)}
         <h3 class="title">${esc(b.title)}</h3>
         ${b.tagline?`<div class="tagline">${esc(b.tagline)}</div>`:''}
         <div class="prices num"><span class="price"><small>$</small>${b.price}</span>${b.list && b.list>b.price?`<span class="list">原價 $${b.list}</span>`:''}</div>
@@ -507,6 +521,7 @@ function openDetail(id) {
   openSheet('書籍介紹', `<div class="detail">
     ${b.cover ? `<img src="${esc(b.cover)}" alt="${esc(b.title)} 封面">` : `<div class="bigph">${placeholder(b, true)}</div>`}
     <div class="pub">${b.publisher?`<span>${esc(b.publisher)}</span>`:''}${b.category?`<span>${esc(b.category)}</span>`:''}${b.age?`<span>${esc(b.age)}</span>`:''}</div>
+    ${badge(b)}
     <h3 class="title" style="font-size:18px">${esc(b.title)}</h3>
     ${b.tagline?`<div class="tagline">${esc(b.tagline)}</div>`:''}
     <div class="prices num"><span class="price"><small>$</small>${b.price}</span>${b.list && b.list>b.price?`<span class="list">原價 $${b.list}</span>`:''}${z?`<span class="pill" style="background:var(--berry-soft);color:var(--berry)">${z}</span>`:''}</div>
