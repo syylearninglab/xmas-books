@@ -75,6 +75,9 @@ button{cursor:pointer}
 /* 篩選 */
 .chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
+/* 手機：可左右滑，右側淡出提示還有更多；電腦：自動換行全部顯示 */
+@media (max-width:639px){.chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent);padding-right:40px}}
+@media (min-width:640px){.chips{flex-wrap:wrap;overflow:visible}}
 .chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-size:14px}
 .chip[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);color:var(--pine-ink)}
 .promo{margin-top:12px;padding:10px 14px;border:1.5px dashed var(--berry);border-radius:10px;color:var(--berry);font-weight:700;font-size:14px}
