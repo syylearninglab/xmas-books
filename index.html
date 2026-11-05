@@ -415,7 +415,6 @@ function renderGrid() {
   const canOrder = S.settings.isOpen;
   $('#grid').innerHTML = list.map(b => {
     const q = S.cart[b.id] || 0, max = maxFor(b), sold = max <= 0 && q === 0;
-    const z = zhe(b.list, b.price);
     const left = b.remaining != null && b.remaining > 0 && b.remaining <= 5 ? `<span class="stockflag">剩 ${b.remaining} 本</span>` : '';
     const control = sold ? '<div class="soldbtn">已售完</div>'
       : !canOrder ? ''
@@ -425,7 +424,7 @@ function renderGrid() {
           <button data-d="1" aria-label="增加 ${esc(b.title)}" ${q>=max?'disabled':''}>＋</button>
         </div>`;
     return `<article class="book ${sold?'soldout':''}">
-      <button class="cover" data-detail="${esc(b.id)}" aria-label="查看 ${esc(b.title)}">${coverHtml(b)}${z?`<span class="tagzhe">${z}</span>`:''}${left}</button>
+      <button class="cover" data-detail="${esc(b.id)}" aria-label="查看 ${esc(b.title)}">${coverHtml(b)}${left}</button>
       <div class="info">
         <div class="pub">${b.publisher?`<span>${esc(b.publisher)}</span>`:''}${b.category?`<span>${esc(b.category)}</span>`:''}${b.age?`<span>${esc(b.age)}</span>`:''}</div>
         ${badge(b)}
@@ -520,14 +519,14 @@ $('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay') cl
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#overlay').hidden) closeSheet(); });
 
 function openDetail(id) {
-  const b = S.byId[id], z = zhe(b.list, b.price);
+  const b = S.byId[id];
   openSheet('書籍介紹', `<div class="detail">
     ${b.cover ? `<img src="${esc(b.cover)}" alt="${esc(b.title)} 封面">` : `<div class="bigph">${placeholder(b, true)}</div>`}
     <div class="pub">${b.publisher?`<span>${esc(b.publisher)}</span>`:''}${b.category?`<span>${esc(b.category)}</span>`:''}${b.age?`<span>${esc(b.age)}</span>`:''}</div>
     ${badge(b)}
     <h3 class="title" style="font-size:18px">${esc(b.title)}</h3>
     ${b.tagline?`<div class="tagline">${esc(b.tagline)}</div>`:''}
-    <div class="prices num"><span class="price"><small>$</small>${b.price}</span>${b.list && b.list>b.price?`<span class="list">原價 $${b.list}</span>`:''}${z?`<span class="pill" style="background:var(--berry-soft);color:var(--berry)">${z}</span>`:''}</div>
+    <div class="prices num"><span class="price"><small>$</small>${b.price}</span>${b.list && b.list>b.price?`<span class="list">原價 $${b.list}</span>`:''}</div>
     ${b.desc?`<p style="margin:0;white-space:pre-line">${esc(b.desc)}</p>`:''}
   </div>`);
 }
