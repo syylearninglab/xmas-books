@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>聖誕選書團購</title>
-<meta name="description" content="聖誕節精選童書團購，點開選書、填資料，7-11 取貨。">
+<meta name="description" content="聖誕節精選童書團購，點開選書、填資料就完成。">
 <!-- LINE / Facebook 分享預覽：部署後把網址換成你的 GitHub Pages 網址 -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="🎄 聖誕選書團購｜開放下單中">
-<meta property="og:description" content="風車、信誼、小天下聖誕童書，團購優惠價，7-11 取貨。點我選書！">
+<meta property="og:description" content="風車、信誼、小天下聖誕童書，團購優惠價。點我選書！">
 <meta property="og:image" content="https://syylearninglab.github.io/xmas-books/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -198,7 +198,7 @@ footer{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 0 8px}
 <header class="hero">
   <div class="wrap">
     <h1 id="siteTitle">聖誕選書團購</h1>
-    <p>挑好書、選數量、填資料，7-11 取貨</p>
+    <p>挑好書、選數量、填資料就完成</p>
     <div class="deadline" id="deadline" hidden></div>
   </div>
 </header>
@@ -325,8 +325,10 @@ function demoApi(action, p) {
     } else if (action === 'submit') {
       const o = p.order, ed = p.edit;
       let existing = ed ? orders.find(x => x.id === ed.orderId) : null;
-      if (!ed) { const dup = orders.find(x => x.status==='有效' && np(x.phone)===np(o.phone));
-        if (dup) return resolve({ ok:false, code:'DUPLICATE', error:'這支電話已經有訂單（'+dup.id+'），請到「查詢訂單」修改，不要重複下單' }); }
+      let addonOf = existing ? (existing.addonOf || '') : '';
+      if (!ed) { const mine = orders.filter(x => x.status==='有效' && np(x.phone)===np(o.phone)), dup = mine.find(x => !x.paid);
+        if (dup) return resolve({ ok:false, code:'DUPLICATE', dupId: dup.id, error:'這支電話已經有一張還沒付款的訂單（'+dup.id+'），可以把這次選的書直接加進去' });
+        if (mine.length) addonOf = '追加單（原單 ' + mine.map(x => x.id).join('、') + '）'; }
       const sd = sold(existing && existing.id);
       const lines = [];
       for (const it of o.items) { const b = DEMO.books.find(x => x.id===it.id);
@@ -335,7 +337,7 @@ function demoApi(action, p) {
       const t = totals(lines);
       const id = existing ? existing.id : 'XM' + String(orders.length+1).padStart(4,'0');
       const rec = Object.assign({ id, createdAt: existing ? existing.createdAt : new Date().toISOString(), status:'有效', paid:false, picked:false },
-        o, { items: lines, qty:t.qty, listSum:t.listSum, subtotal:t.subtotal, discount:t.discount, total:t.total });
+        o, { addonOf, items: lines, qty:t.qty, listSum:t.listSum, subtotal:t.subtotal, discount:t.discount, total:t.total });
       if (existing) orders[orders.indexOf(existing)] = rec; else orders.push(rec);
       save(); resolve({ ok:true, order: rec });
     } else if (action === 'lookup') {
@@ -533,7 +535,7 @@ function openDetail(id) {
 
 /* ======================= 結帳 ======================= */
 const FIELDS = [
-  ['name','姓名','text','name','王小明'],
+  ['name','真實姓名','text','name','王小明'],
   ['nick','社群暱稱','text','nickname','在 LINE 群裡的暱稱'],
   ['lineId','LINE 名稱','text','off','LINE 上顯示的名稱'],
   ['phone','手機號碼','tel','tel','0912345678'],
@@ -562,13 +564,6 @@ $('#checkoutBtn').onclick = () => {
         ${FIELDS.map(([k,l,t,ac,ph]) => `<div class="field" data-f="${k}"><label for="f_${k}">${l} <span class="req">*</span></label>
           <input id="f_${k}" name="${k}" type="${t}" ${t==='tel'?'inputmode="numeric"':''} autocomplete="${ac}" ${k==='lineId'?'autocapitalize="off"':''} placeholder="${ph}" value="${v(k)}"><div class="msg"></div></div>`).join('')}
       </div>
-      <div class="row2">
-        <div class="field" data-f="store"><label for="f_store">7-11 取貨門市 <span class="req">*</span></label>
-          <input id="f_store" name="store" placeholder="例如：鑫東門門市" value="${v('store')}"><div class="msg"></div></div>
-        <div class="field" data-f="storeId"><label for="f_storeId">門市店號 <span class="req">*</span></label>
-          <input id="f_storeId" name="storeId" inputmode="numeric" maxlength="6" placeholder="6 碼數字" value="${v('storeId')}"><div class="msg"></div></div>
-      </div>
-      <div class="field" style="margin-top:-6px"><div class="sub">不知道店號？到 <a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener">7-11 門市查詢</a> 搜尋門市名稱就能看到。</div></div>
       <div class="field"><label for="f_note">備註</label><textarea id="f_note" name="note" rows="2" placeholder="想跟團主說的話（選填）">${v('note')}</textarea></div>
       <div class="hp" aria-hidden="true"><input id="f_website" name="website" tabindex="-1" autocomplete="off"></div>
       <div id="formErr"></div>
@@ -581,17 +576,15 @@ $('#checkoutBtn').onclick = () => {
 };
 
 function readForm(form) {
-  const o = {}; ['name','nick','lineId','phone','store','storeId','note','website'].forEach(k => o[k] = (form.elements[k]?.value || '').trim()); return o;
+  const o = {}; ['name','nick','lineId','phone','note','website'].forEach(k => o[k] = (form.elements[k]?.value || '').trim()); return o;
 }
 function validate(o) {
   const err = {};
-  if (!o.name) err.name = '請填寫姓名';
+  if (!o.name) err.name = '請填寫真實姓名';
   if (!o.nick) err.nick = '請填寫社群暱稱，方便團主對照';
   if (!o.lineId) err.lineId = '請填寫 LINE 名稱';
   const ph = o.phone.replace(/\D/g, '');
   if (!/^09\d{8}$/.test(ph)) err.phone = '請填 09 開頭的 10 碼手機號碼';
-  if (!o.store) err.store = '請填寫取貨門市';
-  if (!/^\d{6}$/.test(o.storeId.replace(/\D/g,''))) err.storeId = '店號是 6 碼數字';
   return err;
 }
 async function submitOrder(form) {
@@ -600,13 +593,18 @@ async function submitOrder(form) {
   $('#formErr').innerHTML = '';
   if (Object.keys(err).length) { form.querySelector('.field.err input')?.focus(); return; }
   const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = '送出中…';
-  const payload = { order: Object.assign({}, o, { phone: o.phone.replace(/\D/g,''), storeId: o.storeId.replace(/\D/g,''),
+  const payload = { order: Object.assign({}, o, { phone: o.phone.replace(/\D/g,''),
     items: cartLines().map(l => ({ id: l.id, qty: l.qty })) }) };
   if (S.editing) payload.edit = { orderId: S.editing.orderId, phone: S.editing.phone, lineId: S.editing.lineId };
   const r = await api('submit', payload);
   if (!r.ok) {
     btn.disabled = false; btn.textContent = S.editing ? '送出修改' : '送出訂單';
     $('#formErr').innerHTML = `<div class="formerr">${esc(r.error || '送出失敗，請再試一次')}</div>`;
+    if (r.code === 'DUPLICATE') {
+      $('#formErr').insertAdjacentHTML('beforeend', `<button type="button" class="btn pine block" id="mergeBtn" style="margin-top:8px">➕ 把這次選的書加到原訂單 ${esc(r.dupId || '')}</button>
+        <div class="hint" style="text-align:center">原訂單付款後，就可以另外下「追加單」</div>`);
+      $('#mergeBtn').onclick = () => mergeIntoOrder(payload.order.phone, o.lineId, r.dupId, $('#mergeBtn'));
+    }
     if (r.code === 'STOCK') reloadCatalog();
     return;
   }
@@ -621,14 +619,15 @@ function summaryText(o) {
   const lines = o.items.map(i => `・${i.title} ×${i.qty}　${money(i.price*i.qty)}`).join('\n');
   return `🎄 ${S.settings.title}｜${o.id}\n` +
     `暱稱：${o.nick}\n${lines}\n` +
-    `共 ${o.qty} 本｜應付 ${money(o.total)}${o.discount ? `（已折 ${money(o.discount)}）` : ''}\n` +
-    `取貨：7-11 ${o.store}（${o.storeId}）`;
+    `共 ${o.qty} 本｜應付 ${money(o.total)}${o.discount ? `（已折 ${money(o.discount)}）` : ''}` +
+    (o.addonOf ? `\n📌 ${o.addonOf}` : '');
 }
 function showDone(o, wasEdit) {
   const text = summaryText(o);
   openSheet(wasEdit ? '修改完成' : '下單成功', `<div class="done">
     <p class="big">${wasEdit ? '訂單已更新 ✏️' : '謝謝你的訂購 🎄'}</p>
     <span class="oid">訂單編號 ${esc(o.id)}</span>
+    ${o.addonOf ? `<p class="hint" style="margin:6px 0 0">📌 這是${esc(o.addonOf)}，請另外付這張的款項</p>` : ''}
     <p class="hint" style="margin:6px 0 0">把下面的摘要複製貼回 LINE 群，團主就能快速確認</p>
     <pre class="summary" id="sumText">${esc(text)}</pre>
     <button class="btn pine block" id="copyBtn">📋 複製訂單摘要</button>
@@ -663,12 +662,11 @@ async function doLookup() {
     return `<div class="order">
       <div class="ohead"><b>${esc(o.id)}</b>
         <span class="pill ${active?'ok':'no'}">${esc(o.status)}</span>
-        ${o.paid?'<span class="pill paid">已付款</span>':''}${o.picked?'<span class="pill paid">已取書</span>':''}</div>
+        ${o.paid?'<span class="pill paid">已付款</span>':''}${o.picked?'<span class="pill paid">已取書</span>':''}${o.addonOf?'<span class="pill no">追加單</span>':''}</div>
       <div class="lines">${o.items.map(i => `<div class="ln"><span class="t">${esc(i.title)}</span><span class="q num">×${i.qty}</span><span class="a num">${money(i.price*i.qty)}</span></div>`).join('')}</div>
-      <div class="tot"><div class="ln big"><span class="t">應付金額</span><span class="a num">${money(o.total)}</span></div>
-        <div class="hint">取貨：7-11 ${esc(o.store)}（${esc(o.storeId)}）</div></div>
-      ${canEdit ? `<div class="oacts"><button class="btn pine" data-edit="${esc(o.id)}">修改訂單</button><button class="btn ghost" data-cancel="${esc(o.id)}">取消訂單</button></div>`
-        : active && o.paid ? '<div class="hint">已付款的訂單如需修改，請私訊團主</div>' : ''}
+      <div class="tot"><div class="ln big"><span class="t">應付金額</span><span class="a num">${money(o.total)}</span></div></div>
+      ${canEdit ? `<div class="oacts"><button class="btn pine" data-edit="${esc(o.id)}">修改／加書</button><button class="btn ghost" data-cancel="${esc(o.id)}">取消訂單</button></div>`
+        : active && o.paid ? `<div class="hint">已付款的訂單不能修改。${S.settings.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單。' : '如需調整請私訊團主。'}</div>` : ''}
       ${active ? `<button class="btn ghost" data-copy="${esc(o.id)}" style="justify-self:start;padding:8px 14px;font-size:13.5px">📋 複製摘要</button>` : ''}
     </div>`;
   }).join('');
@@ -688,10 +686,29 @@ $('#lookupResult').addEventListener('click', async e => {
 });
 function startEdit(o) {
   S.editing = { orderId: o.id, phone: S.lookup.phone, lineId: S.lookup.lineId, prev: {},
-    form: { name:o.name, nick:o.nick, lineId:o.lineId, phone:o.phone, store:o.store, storeId:o.storeId, note:o.note } };
+    form: { name:o.name, nick:o.nick, lineId:o.lineId, phone:o.phone, note:o.note } };
   S.cart = {};
   o.items.forEach(i => { S.editing.prev[i.id] = i.qty; if (S.byId[i.id]) S.cart[i.id] = i.qty; });
   setTab('shop'); renderAll(); toast('已載入訂單，調整後按「確認修改」');
+}
+/* 重複下單時：把這次購物車的書併進原本還沒付款的訂單 */
+async function mergeIntoOrder(phone, lineId, orderId, btn) {
+  btn.disabled = true; btn.textContent = '載入原訂單中…';
+  const extra = Object.assign({}, S.cart);
+  const r = await api('lookup', { phone, lineId });
+  const o = r.ok && r.orders.find(x => x.id === orderId && x.status === '有效' && !x.paid);
+  if (!o) {
+    btn.disabled = false; btn.textContent = '➕ 把這次選的書加到原訂單';
+    $('#formErr').innerHTML = `<div class="formerr">找不到原訂單 ${esc(orderId || '')}。如果 LINE 名稱 和上次填的不一樣，請到「查詢訂單」用上次的名稱查詢後按「修改／加書」。</div>`;
+    return;
+  }
+  closeSheet();
+  S.lookup = { phone, lineId };
+  startEdit(o);
+  const max = (S.settings && S.settings.perMax) || 10;
+  Object.keys(extra).forEach(id => { if (S.byId[id]) S.cart[id] = Math.min((S.cart[id] || 0) + extra[id], max); });
+  renderAll();
+  toast(`已把書加進訂單 ${o.id}，確認數量後按「確認修改」`);
 }
 function quitEdit() { S.editing = null; S.cart = store.get('xmas-cart', {}); renderAll(); }
 
