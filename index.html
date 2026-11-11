@@ -99,6 +99,7 @@ button{cursor:pointer}
 .pub span+span::before{content:"·";margin-right:6px}
 .title{font-weight:700;font-size:14.5px;line-height:1.45;margin:0}
 .tagline{font-size:12.5px;color:var(--gold);font-weight:500}
+.badges{display:flex;flex-wrap:wrap;gap:4px}
 .badge{align-self:flex-start;display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--berry-soft);color:var(--berry)}
 .badge.t-buy{background:var(--gold-soft);color:var(--gold)}
 .badge.t-new{background:var(--pine-soft);color:var(--pine)}
@@ -392,9 +393,14 @@ function coverHtml(b) {
 }
 window.phFor = id => placeholder(S.byId[id]);
 
-const TAG_STYLE = { '去年熱賣': ['🔥',''], '團友熱購': ['⭐','t-buy'], '新書': ['✨','t-new'], '交換禮物': ['🎁','t-new'] };
+const TAG_STYLE = { 'SYY社群熱購': ['🔥',''], '新書': ['✨','t-new'], '交換禮物': ['🎁','t-buy'] };
+const TAG_ORDER = ['SYY社群熱購', '新書', '交換禮物'];
+// 舊標籤名稱自動換成新的（試算表還沒改也能正確顯示）
+const TAG_ALIAS = { '去年熱賣': 'SYY社群熱購', '團友熱購': 'SYY社群熱購', '社群熱購': 'SYY社群熱購', '熱賣': 'SYY社群熱購' };
+// 一本書可有多個標籤，用「、」「,」「，」「/」分隔，例如「SYY社群熱購、新書」
+const tagsOf = b => [...new Set(String(b.tag || '').split(/[、,，\/／]/).map(t => t.trim()).filter(Boolean).map(t => TAG_ALIAS[t] || t))];
 const tagIcon = t => (TAG_STYLE[t] || ['🏷️'])[0];
-const badge = b => b.tag ? `<span class="badge ${(TAG_STYLE[b.tag]||[])[1]||''}">${tagIcon(b.tag)} ${esc(b.tag)}</span>` : '';
+const badge = b => { const ts = tagsOf(b); return ts.length ? `<div class="badges">${ts.map(t => `<span class="badge ${(TAG_STYLE[t]||[])[1]||''}">${tagIcon(t)} ${esc(t)}</span>`).join('')}</div>` : ''; };
 
 function renderChips() {
   const pubs = [...new Set(S.books.map(b => b.publisher).filter(Boolean))];
@@ -404,7 +410,7 @@ function renderChips() {
   $('#pubChips').hidden = pubs.length <= 1;
   $('#catChips').innerHTML = cats.length > 1 ? ['全部', ...cats].map(v => chip('cat', v)).join('') : '';
   $('#catChips').hidden = cats.length <= 1;
-  const tags = [...new Set(S.books.map(b => b.tag).filter(Boolean))];
+  const tags = [...new Set(S.books.flatMap(tagsOf))].sort((a, b) => { const i = TAG_ORDER.indexOf(a), j = TAG_ORDER.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
   $('#tagChips').innerHTML = tags.length ? ['全部', ...tags].map(v => chip('tag', v).replace('>'+esc(v)+'<', '>'+(v==='全部'?'全部標籤':tagIcon(v)+' '+esc(v))+'<')).join('') : '';
   $('#tagChips').hidden = !tags.length;
   const p = promoText();
@@ -412,7 +418,7 @@ function renderChips() {
 }
 
 function renderGrid() {
-  const list = S.books.filter(b => (S.pub === '全部' || b.publisher === S.pub) && (S.cat === '全部' || b.category === S.cat) && (S.tag === '全部' || b.tag === S.tag));
+  const list = S.books.filter(b => (S.pub === '全部' || b.publisher === S.pub) && (S.cat === '全部' || b.category === S.cat) && (S.tag === '全部' || tagsOf(b).includes(S.tag)));
   if (!list.length) { $('#grid').innerHTML = '<p class="empty" style="grid-column:1/-1">這個分類目前沒有書</p>'; return; }
   const canOrder = S.settings.isOpen;
   $('#grid').innerHTML = list.map(b => {
