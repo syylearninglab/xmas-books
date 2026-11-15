@@ -630,7 +630,7 @@ function renderFilters() {
   const hot = (S.featured || []).filter(t => tagC.get(t));    // 沒有書的主題不顯示
   let h = '';
   if (S.xbooks.length && S.age === 'all' && !S.tags.size && !S.pub && !S.q.trim())
-    h += `<button class="xpromo" data-act="age" data-k="X"><span class="ic">🎄</span><span><b>聖誕選書團購 ${S.xbooks.length} 種也在這裡</b><span>團購優惠價・可以和現貨一起放購物車${S.xs && S.xs.deadline ? '・' + esc(fmtDeadline(S.xs.deadline)) + ' 截止' : ''}</span></span><span class="go">去看看 →</span></button>`;
+    h += `<button class="xpromo" data-act="age" data-k="X"><span class="ic">🎄</span><span><b>${fillText(siteText('xpromoTitle'))}</b><span>${fillText(siteText('xpromoText'))}${S.xs && S.xs.deadline ? '・' + esc(fmtDeadline(S.xs.deadline)) + ' 截止' : ''}</span></span><span class="go">去看看 →</span></button>`;
   if (hot.length) h += `<section class="hot"><div class="hot-h">SYY 社群熱購推薦</div><div class="hotchips">` +
     hot.map(t => `<button class="hotchip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}<small>${tagC.get(t)} 種</small></button>`).join('') + `</div></section>`;
   const more = [...tagC.entries()].filter(([t]) => !hot.includes(t));
@@ -727,9 +727,22 @@ function renderBanners() {
   const q = $('#quitEdit'); if (q) q.onclick = quitEdit;
 }
 
+// 頁首／聖誕提示卡文字：試算表「設定」分頁可改，舊版後台沒回傳就用預設
+const TEXT_DEFAULT = {
+  lede1: '手邊現貨 {現貨數} 種・確認後就出貨',
+  lede2: '🎄 聖誕選書團購 {聖誕數} 種也能一起下單',
+  xpromoTitle: '聖誕選書團購 {聖誕數} 種也在這裡',
+  xpromoText: '團購優惠價・可以和現貨一起放購物車',
+};
+function siteText(k) { const v = S.settings && S.settings[k]; return String(v || '').trim() || TEXT_DEFAULT[k]; }
+/** 跳脫後把 {現貨數}{聖誕數} 換成數字；wrap 決定數字要不要放大加色；儲存格內換行 → <br> */
+function fillText(t, wrap) {
+  const n = { '現貨數': S.books.filter(b => !isOut(b)).length, '聖誕數': S.xbooks.length };
+  return esc(t).replace(/\{(現貨數|聖誕數)\}/g, (_, k) => wrap ? `<b class="num">${n[k]}</b>` : n[k]).replace(/\r?\n/g, '<br>');
+}
+
 function renderLede() {
-  const n = S.books.filter(b => !isOut(b)).length;
-  $('#lede').innerHTML = `手邊現貨 <b class="num">${n}</b> 種・確認後就出貨` + (S.xbooks.length ? `<br>🎄 聖誕選書團購 <b class="num">${S.xbooks.length}</b> 種也能一起下單` : '');
+  $('#lede').innerHTML = fillText(siteText('lede1'), true) + (S.xbooks.length ? '<br>' + fillText(siteText('lede2'), true) : '');
 }
 
 function renderShop() { renderAges(); renderFilters(); renderShelf(); }
