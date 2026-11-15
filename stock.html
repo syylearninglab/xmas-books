@@ -7,8 +7,8 @@
 <meta name="description" content="SYY 學習實驗室手邊現貨童書，線上選書下單，確認後就出貨；聖誕選書團購也能一起下單。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="📚 SYY 現貨書櫃｜手邊現貨・確認後就出貨">
-<meta property="og:description" content="上誼、信誼、禾流、青林等 300 多種童書現貨，聖誕選書團購也能一起下單，點我選書！">
-<meta property="og:image" content="https://syylearninglab.github.io/xmas-books/og-stock.png?v=2">
+<meta property="og:description" content="上誼、信誼、禾流、青林等各大出版社童書現貨，聖誕選書團購也能一起下單，點我選書！">
+<meta property="og:image" content="https://syylearninglab.github.io/xmas-books/og-stock.png?v=3">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
@@ -92,17 +92,19 @@ button{cursor:pointer}
 .search input{border:0;background:transparent;outline:0;flex:1;min-width:0;padding:11px 0;font-size:16px}
 .search svg{flex:none;opacity:.6}
 .search .clrq{border:0;background:var(--line);width:26px;height:26px;border-radius:50%;font-size:14px;line-height:1;flex:none}
-.ages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:10px}
-.age{border:1.5px solid var(--line);border-left:5px solid var(--c,var(--navy));background:var(--card);border-radius:6px;padding:7px 2px;font-weight:700;line-height:1.2;font-size:14px;min-width:0}
+.ages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}
+.age{border:1.5px solid var(--line);border-left:5px solid var(--c,var(--navy));background:var(--card);border-radius:6px;padding:11px 2px;font-weight:700;line-height:1.2;font-size:14px;min-width:0}
 .age small{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:2px}
 .age.on{background:var(--c,var(--navy));border-color:var(--c,var(--navy));color:var(--onacc)}
 .age.on small{color:inherit;opacity:.85}
 @media (max-width:380px){.age{font-size:13px}}
 
-.xpromo{margin-top:12px;display:flex;align-items:center;gap:12px;background:var(--x-soft);border:1.5px dashed var(--x-pine);border-radius:10px;padding:10px 12px;color:var(--ink);width:100%;text-align:left}
-.xpromo .ic{font-size:26px;line-height:1}
-.xpromo b{color:var(--x-pine);display:block;font-size:15px}
-.xpromo span{font-size:12.5px;color:var(--muted);display:block}
+.xpromo{margin-top:10px;display:flex;align-items:center;gap:10px;background:var(--x-soft);border:1.5px dashed var(--x-pine);border-radius:8px;padding:6px 12px;color:var(--ink);width:100%;text-align:left;line-height:1.35}
+.xpromo .ic{font-size:20px;line-height:1}
+.xpromo b{color:var(--x-pine);display:block;font-size:14.5px}
+.xpromo span{font-size:12px;color:var(--muted);display:block}
+.xpromo.back{border-style:solid}
+.xpromo.back .go{margin-left:0;margin-right:auto}
 .xpromo .go{margin-left:auto;font-weight:700;color:var(--x-pine);white-space:nowrap;font-size:14px}
 
 .hot{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;position:relative}
@@ -615,13 +617,10 @@ function visible() {
   });
 }
 
+// 年齡分區只放平常的分類；聖誕等節慶活動用下方的專區卡片進出（不顯示書的種數）
 function renderAges() {
-  const n = k => allBooks().filter(b => ageKey(b) === k).length;
-  const all = allBooks().length;
-  $('#ages').innerHTML = `<button class="age ${S.age==='all'?'on':''}" data-act="age" data-k="all">全部<small>${all} 種</small></button>` +
-    AGES.map(a => `<button class="age ${S.age===a.k?'on':''}" style="--c:${ageColor(a.k)}" data-act="age" data-k="${a.k}">${esc(a.label)}<small>${n(a.k)} 種</small></button>`).join('') +
-    (S.xbooks.length ? `<button class="age ${S.age==='X'?'on':''}" style="--c:${ageColor('X')}" data-act="age" data-k="X">🎄聖誕<small>${S.xbooks.length} 種</small></button>` : '');
-  $('#ages').style.gridTemplateColumns = `repeat(${S.xbooks.length ? 5 : 4},minmax(0,1fr))`;
+  $('#ages').innerHTML = `<button class="age ${S.age==='all'?'on':''}" data-act="age" data-k="all">全部</button>` +
+    AGES.map(a => `<button class="age ${S.age===a.k?'on':''}" style="--c:${ageColor(a.k)}" data-act="age" data-k="${a.k}">${esc(a.label)}</button>`).join('');
 }
 
 function renderFilters() {
@@ -629,18 +628,19 @@ function renderFilters() {
   const pubs = countBy(pubName);
   const hot = (S.featured || []).filter(t => tagC.get(t));    // 沒有書的主題不顯示
   let h = '';
-  if (S.xbooks.length && S.age === 'all' && !S.tags.size && !S.pub && !S.q.trim())
-    h += `<button class="xpromo" data-act="age" data-k="X"><span class="ic">🎄</span><span><b>${fillText(siteText('xpromoTitle'))}</b><span>${fillText(siteText('xpromoText'))}${S.xs && S.xs.deadline ? '・' + esc(fmtDeadline(S.xs.deadline)) + ' 截止' : ''}</span></span><span class="go">去看看 →</span></button>`;
+  if (S.xbooks.length) h += S.age === 'X'
+    ? `<button class="xpromo back" data-act="age" data-k="all"><span class="go">← 返回現貨書櫃</span><span class="ic">🎄</span><span><b>${fillText(siteText('xpromoTitle'))}</b></span></button>`
+    : `<button class="xpromo" data-act="age" data-k="X"><span class="ic">🎄</span><span><b>${fillText(siteText('xpromoTitle'))}</b><span>${fillText(siteText('xpromoText'))}${S.xs && S.xs.deadline ? '・' + esc(fmtDeadline(S.xs.deadline)) + ' 截止' : ''}</span></span><span class="go">去看看 →</span></button>`;
   if (hot.length) h += `<section class="hot"><div class="hot-h">SYY 社群熱購推薦</div><div class="hotchips">` +
-    hot.map(t => `<button class="hotchip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}<small>${tagC.get(t)} 種</small></button>`).join('') + `</div></section>`;
+    hot.map(t => `<button class="hotchip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}</button>`).join('') + `</div></section>`;
   const more = [...tagC.entries()].filter(([t]) => !hot.includes(t));
   const nt = [...S.tags].filter(t => !hot.includes(t)).length;
   h += `<div class="frow">` +
     (more.length ? `<button class="drop ${S.panel==='tag'?'open':''} ${nt?'has':''}" data-act="panel" data-p="tag">更多主題${nt?' · '+nt:''} <i>▼</i></button>` : '') +
     `<button class="drop ${S.panel==='pub'?'open':''} ${S.pub?'has':''}" data-act="panel" data-p="pub">${S.pub ? esc(S.pub) : '出版社'} <i>▼</i></button>` +
     `<button class="chip dash ${S.inStock?'on':''}" data-act="instock" aria-pressed="${S.inStock}">只看有貨</button></div>`;
-  if (S.panel === 'tag') h += `<div class="panel"><div class="chipwrap">${more.map(([t,n]) => `<button class="chip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)} <small>${n}</small></button>`).join('')}</div></div>`;
-  if (S.panel === 'pub') h += `<div class="panel"><div class="pubgrid">${pubs.map(([p,n]) => `<button class="pubbtn ${S.pub===p?'on':''}" data-act="pub" data-p="${esc(p)}">${esc(p)}<small>${n} 種</small></button>`).join('')}</div></div>`;
+  if (S.panel === 'tag') h += `<div class="panel"><div class="chipwrap">${more.map(([t]) => `<button class="chip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>`;
+  if (S.panel === 'pub') h += `<div class="panel"><div class="pubgrid">${pubs.map(([p]) => `<button class="pubbtn ${S.pub===p?'on':''}" data-act="pub" data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div></div>`;
   const act = [...[...S.tags].map(t => `<button class="x2" data-act="tag" data-t="${esc(t)}">${esc(t)} ✕</button>`),
     ...(S.pub ? [`<button class="x2" data-act="unpub">${esc(S.pub)} ✕</button>`] : []),
     ...(S.inStock ? [`<button class="x2" data-act="instock">只看有貨 ✕</button>`] : []),
@@ -685,7 +685,7 @@ function renderShelf() {
   (S.age === 'all' ? AGES : AGES.filter(a => a.k === S.age)).forEach(a => {
     const list = vis.filter(b => ageKey(b) === a.k);
     if (!list.length) return;
-    out += `<div class="sec" style="--c:${ageColor(a.k)}"><span class="lbl">${a.k} 區</span><h2>${esc(a.label)}</h2><span>${esc(a.sub)}・${list.length} 種</span></div>
+    out += `<div class="sec" style="--c:${ageColor(a.k)}"><span class="lbl">${a.k} 區</span><h2>${esc(a.label)}</h2><span>${esc(a.sub)}</span></div>
       <div class="grid">${list.map(cardHtml).join('')}</div>`;
   });
   const orphan = S.age === 'all' ? vis.filter(b => !isX(b) && !AGES.some(a => a.k === ageKey(b))) : [];
@@ -694,7 +694,7 @@ function renderShelf() {
   if (xl.length) {
     const xs = S.xs || {};
     const dl = xs.deadline ? `<b>${esc(fmtDeadline(xs.deadline))} 截止</b>・` : '';
-    out += `<div class="sec xm" id="xsec"><span class="lbl">🎄 聖誕</span><h2>${esc(xs.title || '聖誕選書團購')}</h2><span>預購・${xl.length} 種</span></div>
+    out += `<div class="sec xm" id="xsec"><span class="lbl">🎄 聖誕</span><h2>${esc(xs.title || '聖誕選書團購')}</h2><span>預購</span></div>
       <div class="xnote">${xs.isOpen ? '' : '<b>聖誕團購已截止</b>・'}${dl}團購優惠價，到貨後統一出貨。和現貨一起結帳時，會自動分成「現貨單」和「聖誕團購單」兩張。</div>
       <div class="grid">${xl.map(cardHtml).join('')}</div>`;
   }
@@ -729,20 +729,19 @@ function renderBanners() {
 
 // 頁首／聖誕提示卡文字：試算表「設定」分頁可改，舊版後台沒回傳就用預設
 const TEXT_DEFAULT = {
-  lede1: '手邊現貨 {現貨數} 種・確認後就出貨',
-  lede2: '🎄 聖誕選書團購 {聖誕數} 種也能一起下單',
-  xpromoTitle: '聖誕選書團購 {聖誕數} 種也在這裡',
+  lede1: '手邊現貨・確認後就出貨',
+  lede2: '🎄 聖誕選書團購也能一起下單',
+  xpromoTitle: '聖誕選書團購專區',
   xpromoText: '團購優惠價・可以和現貨一起放購物車',
 };
 function siteText(k) { const v = S.settings && S.settings[k]; return String(v || '').trim() || TEXT_DEFAULT[k]; }
-/** 跳脫後把 {現貨數}{聖誕數} 換成數字；wrap 決定數字要不要放大加色；儲存格內換行 → <br> */
-function fillText(t, wrap) {
-  const n = { '現貨數': S.books.filter(b => !isOut(b)).length, '聖誕數': S.xbooks.length };
-  return esc(t).replace(/\{(現貨數|聖誕數)\}/g, (_, k) => wrap ? `<b class="num">${n[k]}</b>` : n[k]).replace(/\r?\n/g, '<br>');
+/** 跳脫；不顯示書的種數（舊設定裡的 {現貨數}{聖誕數} 連同「種」一起拿掉）；儲存格內換行 → <br> */
+function fillText(t) {
+  return esc(t).replace(/\s*\{(現貨數|聖誕數)\}\s*種?/g, '').replace(/\r?\n/g, '<br>');
 }
 
 function renderLede() {
-  $('#lede').innerHTML = fillText(siteText('lede1'), true) + (S.xbooks.length ? '<br>' + fillText(siteText('lede2'), true) : '');
+  $('#lede').innerHTML = fillText(siteText('lede1')) + (S.xbooks.length ? '<br>' + fillText(siteText('lede2')) : '');
 }
 
 function renderShop() { renderAges(); renderFilters(); renderShelf(); }
@@ -1069,7 +1068,8 @@ async function reloadCatalog() {
   S.books = (r.books || []).map(b => Object.assign({}, b, { kind:'stock' }));
   // 聖誕書單讀不到時，現貨書櫃照常運作，只是不顯示聖誕區
   S.xs = x.ok ? x.settings : null;
-  S.xbooks = x.ok ? (x.books || []).map(normX) : [];
+  // 「設定」的「現貨顯示聖誕專區」填否 → 現貨頁完全不放聖誕書（舊版後台沒這個欄位＝顯示）
+  S.xbooks = x.ok && r.settings.showXmas !== false ? (x.books || []).map(normX) : [];
   allBooks().forEach(b => S.byId[b.id] = b);
   Object.keys(S.cart).forEach(id => { const b = S.byId[id];
     const q = b && setOf(b.kind) && setOf(b.kind).isOpen ? Math.min(S.cart[id], Math.max(maxFor(b), 0)) : 0;
