@@ -115,6 +115,7 @@ button{cursor:pointer}
 .stepper.on{border-color:var(--pine);background:var(--pine-soft)}
 .stepper.on button{background:var(--pine);color:var(--pine-ink)}
 .soldbtn{margin-top:8px;text-align:center;padding:9px;border-radius:999px;background:var(--line);color:var(--muted);font-weight:700;font-size:14px}
+.soldnote{display:block;margin-top:4px;text-align:center;font-size:12.5px;color:var(--pine);font-weight:700;text-decoration:none}
 
 /* 購物車列 */
 .cartbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -417,6 +418,8 @@ function renderChips() {
   $('#promo').innerHTML = p ? `<div class="promo">🎁 滿額優惠：${esc(p)}，結帳時自動折扣</div>` : '';
 }
 
+// 售完時附上 LINE 官方帳號（點了直接開 LINE 加好友／聊天）
+const SOLD_HTML = '<div class="soldbtn">已售完</div><a class="soldnote" href="https://line.me/R/ti/p/@970xwzkg" target="_blank" rel="noopener">請洽SYY LINE官方@970xwzkg</a>';
 function renderGrid() {
   const list = S.books.filter(b => (S.pub === '全部' || b.publisher === S.pub) && (S.cat === '全部' || b.category === S.cat) && (S.tag === '全部' || tagsOf(b).includes(S.tag)));
   if (!list.length) { $('#grid').innerHTML = '<p class="empty" style="grid-column:1/-1">這個分類目前沒有書</p>'; return; }
@@ -424,7 +427,7 @@ function renderGrid() {
   $('#grid').innerHTML = list.map(b => {
     const q = S.cart[b.id] || 0, max = maxFor(b), sold = max <= 0 && q === 0;
     const left = b.remaining != null && b.remaining > 0 && b.remaining <= 5 ? `<span class="stockflag">剩 ${b.remaining} 本</span>` : '';
-    const control = sold ? '<div class="soldbtn">已售完</div>'
+    const control = sold ? SOLD_HTML
       : !canOrder ? ''
       : `<div class="stepper ${q?'on':''}" data-id="${esc(b.id)}">
           <button data-d="-1" aria-label="減少 ${esc(b.title)}" ${q<=0?'disabled':''}>−</button>

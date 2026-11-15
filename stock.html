@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SYY 現貨書櫃</title>
+<meta name="description" content="SYY 學習實驗室手邊現貨童書，線上選書下單，確認後就出貨。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="📚 SYY 現貨書櫃｜手邊現貨・確認後就出貨">
+<meta property="og:description" content="上誼、信誼、禾流、青林等 300 多種童書現貨，不用等團，點我選書！">
+<meta property="og:image" content="https://syylearninglab.github.io/xmas-books/og-stock.png?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: 單欄手機優先。松綠色頁首 → 搜尋＋年齡分區＋熱購主題 → 依年齡分段的書卡格線 → 底部購物車列 */
+:root{
+  --snow:#F4F7F3; --card:#FFFFFF; --ink:#1C2721; --muted:#5D6B63; --line:#DCE4DC;
+  --pine:#1E5B44; --pine-ink:#FFFFFF; --pine-soft:#E3EFE8;
+  --berry:#C22E3A; --berry-soft:#FBE7E8; --gold:#B8862A; --gold-soft:#F7EED9;
+  --A:#3E8E5E; --B:#3C78B5; --C:#C9503F; --onacc:#FFFFFF;
+  --shadow:0 1px 2px rgba(20,40,30,.06),0 4px 14px rgba(20,40,30,.06);
+  --f-display:"LXGW WenKai TC","Kaiti TC","STKaiti","BiauKai",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --snow:#0E1612; --card:#16211B; --ink:#E6EEE8; --muted:#9BAAA1; --line:#26352D;
+  --pine:#2F7A5C; --pine-ink:#FFFFFF; --pine-soft:#1B2E25;
+  --berry:#FF6B72; --berry-soft:#3A1E21; --gold:#E2B857; --gold-soft:#332A16;
+  --A:#5DB97C; --B:#6AA8E4; --C:#F07468; --onacc:#0E1612;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --snow:#0E1612; --card:#16211B; --ink:#E6EEE8; --muted:#9BAAA1; --line:#26352D;
+  --pine:#2F7A5C; --pine-ink:#FFFFFF; --pine-soft:#1B2E25;
+  --berry:#FF6B72; --berry-soft:#3A1E21; --gold:#E2B857; --gold-soft:#332A16;
+  --A:#5DB97C; --B:#6AA8E4; --C:#F07468; --onacc:#0E1612;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--snow);color:var(--ink);font:15px/1.6 var(--f-body);padding-bottom:96px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--pine)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-variant-numeric:tabular-nums}
+
+/* 頁首 */
+.hero{background:var(--pine);color:var(--pine-ink);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background-image:radial-gradient(circle at 12% 30%,#fff 1.2px,transparent 1.6px),radial-gradient(circle at 70% 60%,#fff 1px,transparent 1.4px);
+  background-size:68px 58px,94px 80px}
+.hero .wrap{position:relative;z-index:1;padding-block:22px 18px}
+.brandtag{display:inline-block;background:rgba(255,255,255,.16);font-weight:700;font-size:12.5px;padding:2px 12px;border-radius:999px;letter-spacing:.04em}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,7vw,40px);line-height:1.15;margin:8px 0 0;letter-spacing:.02em;text-wrap:balance}
+.hero p{margin:6px 0 0;opacity:.9;font-size:14px}
+.hero p b{font-size:17px}
+
+/* 分頁 */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--snow);border-bottom:1px solid var(--line)}
+.tabs .wrap{display:flex;gap:4px}
+.tab{flex:1;border:0;background:none;padding:12px 4px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--pine);border-bottom-color:var(--pine)}
+
+.banner{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.banner.demo{background:var(--gold-soft);color:var(--ink)}
+.banner.edit{background:var(--pine-soft)}
+.banner.closed{background:var(--berry-soft);color:var(--berry);font-weight:700}
+.banner.notice{background:var(--card);border:1px solid var(--line);white-space:pre-line}
+.banner .link{margin-left:auto;white-space:nowrap;border:0;background:none;color:var(--pine);font-weight:700;padding:0;text-decoration:underline}
+
+/* 搜尋與篩選（沿用舊版現貨書櫃） */
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:0 12px;margin-top:14px}
+.search:focus-within{border-color:var(--pine)}
+.search input{border:0;background:transparent;outline:0;flex:1;min-width:0;padding:11px 0;font-size:16px}
+.search svg{flex:none;opacity:.6}
+.search .clrq{border:0;background:var(--line);width:26px;height:26px;border-radius:50%;font-size:14px;line-height:1;flex:none}
+.ages{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.age{border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:7px 2px;font-weight:700;line-height:1.2}
+.age small{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:2px}
+.age.on{background:var(--c,var(--pine));border-color:var(--c,var(--pine));color:var(--onacc)}
+.age.on small{color:inherit;opacity:.85}
+.hot{margin-top:12px;background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.hot-h{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.hot-h::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--berry)}
+.hotchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.hotchip{border:1.5px solid var(--line);background:var(--snow);border-radius:12px;padding:8px 6px;font-weight:700;font-size:14px;line-height:1.2;text-align:center}
+.hotchip small{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:2px}
+.hotchip.on{background:var(--berry);border-color:var(--berry);color:#fff}
+.hotchip.on small{color:inherit;opacity:.85}
+.frow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.drop{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.drop i{font-style:normal;font-size:10px;transition:transform .15s}
+.drop.open{border-color:var(--ink)}
+.drop.open i{transform:rotate(180deg)}
+.drop.has{background:var(--gold-soft);border-color:var(--gold);color:var(--ink)}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:500}
+.chip.on{background:var(--pine);border-color:var(--pine);color:var(--pine-ink);font-weight:700}
+.chip.dash{border-style:dashed}
+.chip small{font-size:11px;opacity:.6;margin-left:2px}
+.panel{margin-top:8px;background:var(--card);border-radius:14px;padding:10px;box-shadow:var(--shadow)}
+.panel .chipwrap{display:flex;flex-wrap:wrap;gap:6px}
+.pubgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.pubbtn{border:1.5px solid var(--line);background:var(--snow);border-radius:12px;padding:8px 4px;font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.pubbtn small{display:block;font-weight:500;font-size:11px;color:var(--muted)}
+.pubbtn.on{background:var(--ink);border-color:var(--ink);color:var(--snow)}
+.pubbtn.on small{color:inherit;opacity:.8}
+.active{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center;font-size:13px;color:var(--muted)}
+.active .x2{border:0;background:var(--ink);color:var(--snow);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
+.active .clr{border:0;background:transparent;color:var(--berry);font-weight:700;font-size:13px;text-decoration:underline}
+
+/* 分段 */
+.sec{display:flex;align-items:baseline;gap:8px;margin:22px 0 0;flex-wrap:wrap}
+.sec h2{margin:0;font-size:18px;font-family:var(--f-display)}
+.sec .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none;align-self:center}
+.sec span{color:var(--muted);font-size:13px}
+
+/* 書卡 */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}
+@media (min-width:640px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:900px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.book{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.cover{position:relative;aspect-ratio:1/1;background:var(--pine-soft);border:0;padding:0;display:block;width:100%;max-width:100%}
+.cover img{width:100%;height:100%;object-fit:contain;display:block;padding:10px}
+.cover .ph{position:absolute;inset:14% 14%;border-radius:6px;display:flex;flex-direction:column;justify-content:center;padding:10px;text-align:center;color:#fff;background:var(--c);font-family:var(--f-display);font-size:15px;line-height:1.3}
+.code{position:absolute;left:8px;top:8px;background:var(--c);color:var(--onacc);font-weight:700;font-size:13px;line-height:1;padding:5px 9px 4px;border-radius:999px;letter-spacing:.03em;white-space:nowrap}
+.flag{position:absolute;right:8px;top:8px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--berry);color:#fff;white-space:nowrap}
+.flag.new{background:var(--gold);color:#fff}
+.flag.out{background:var(--muted)}
+.soldout .cover img,.soldout .cover .ph{filter:grayscale(1);opacity:.5}
+.info{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.pub{font-size:12px;color:var(--muted)}
+.title{font-weight:700;font-size:14.5px;line-height:1.45;margin:0}
+.tagline{font-size:12.5px;color:var(--gold);font-weight:500}
+.prices{display:flex;align-items:baseline;gap:8px;margin-top:auto;padding-top:6px;flex-wrap:wrap}
+.price{color:var(--berry);font-weight:700;font-size:20px}
+.price small{font-size:13px;margin-right:1px}
+.ask{font-size:13px;font-weight:700;color:var(--muted);background:var(--snow);border:1px dashed var(--line);border-radius:999px;padding:6px 10px;text-align:center;width:100%}
+
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:8px;border:1px solid var(--line);border-radius:999px;padding:3px}
+.stepper button{width:36px;height:36px;border-radius:50%;border:0;background:var(--pine-soft);color:var(--pine);font-size:20px;font-weight:700;line-height:1}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper .q{min-width:2ch;text-align:center;font-weight:700;font-size:17px}
+.stepper.on{border-color:var(--pine);background:var(--pine-soft)}
+.stepper.on button{background:var(--pine);color:var(--pine-ink)}
+.soldbtn{margin-top:8px;text-align:center;padding:9px;border-radius:999px;background:var(--line);color:var(--muted);font-weight:700;font-size:14px}
+.soldnote{display:block;margin-top:4px;text-align:center;font-size:12.5px;color:var(--pine);font-weight:700;text-decoration:none}
+
+/* 購物車列 */
+.cartbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom,0px)}
+.cartbar .wrap{display:flex;align-items:center;gap:12px;padding-block:10px}
+.cartsum{flex:1;min-width:0;line-height:1.35}
+.cartsum b{font-size:19px;color:var(--berry)}
+.btn{border:0;border-radius:999px;padding:12px 22px;font-weight:700;background:var(--berry);color:#fff;font-size:15px;white-space:nowrap}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.pine{background:var(--pine);color:var(--pine-ink)}
+.btn.ghost{background:transparent;color:var(--pine);border:1.5px solid var(--pine)}
+.btn.block{width:100%}
+
+/* 抽屜式視窗 */
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(10,20,15,.5);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--snow);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.overlay{align-items:center}.sheet{border-radius:18px;max-height:88vh}}
+.sheethead{position:sticky;top:0;background:var(--snow);display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);z-index:1}
+.sheethead h2{margin:0;font-family:var(--f-display);font-size:22px;flex:1}
+.x{border:0;background:var(--line);width:34px;height:34px;border-radius:50%;font-size:18px;line-height:1}
+.sheetbody{padding:16px;display:grid;gap:16px}
+.box{background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--line)}
+.box h3{margin:0 0 10px;font-size:15px}
+.lines{display:grid;gap:8px;font-size:14px}
+.ln{display:flex;gap:10px;align-items:baseline}
+.ln .t{flex:1;min-width:0}
+.ln .t em{font-style:normal;color:var(--muted);font-size:12.5px;margin-right:4px}
+.ln .q{color:var(--muted);white-space:nowrap}
+.ln .a{white-space:nowrap;font-weight:500}
+.tot{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px;display:grid;gap:4px;font-size:14px}
+.tot .ln.big{font-size:17px;font-weight:700}
+.tot .ln.big .a{color:var(--berry)}
+.hint{font-size:12.5px;color:var(--muted)}
+
+.form{display:grid;gap:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-size:13.5px;font-weight:700}
+.field label .req{color:var(--berry)}
+.field input,.field textarea{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:11px 12px;font-size:16px}
+.field input:focus,.field textarea:focus{border-color:var(--pine);outline:none}
+.field.err input{border-color:var(--berry)}
+.field .msg{font-size:12.5px;color:var(--berry);min-height:0}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.formerr{background:var(--berry-soft);color:var(--berry);padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500}
+
+/* 完成畫面 */
+.done{text-align:center;display:grid;gap:8px;justify-items:center}
+.done .big{font-family:var(--f-display);font-size:28px;margin:0}
+.oid{font-size:15px;background:var(--pine-soft);color:var(--pine);padding:4px 14px;border-radius:999px;font-weight:700;letter-spacing:.05em}
+.summary{white-space:pre-wrap;text-align:left;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;width:100%;margin:0;font-family:var(--f-body);user-select:all}
+
+/* 詳細 */
+.detail{display:grid;gap:10px}
+.detail .bigc{position:relative;background:var(--pine-soft);border-radius:12px;aspect-ratio:1/1;max-height:52vh;width:100%}
+.detail .bigc img{width:100%;height:100%;object-fit:contain;padding:12px;display:block}
+.kv{display:flex;flex-wrap:wrap;gap:6px}
+.kv span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12.5px}
+
+/* 查詢 */
+.lookup{display:grid;gap:14px;margin-top:16px;max-width:560px}
+.order{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px;display:grid;gap:10px}
+.ohead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ohead b{font-size:16px;letter-spacing:.04em}
+.pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px}
+.pill.ok{background:var(--pine-soft);color:var(--pine)}
+.pill.no{background:var(--line);color:var(--muted)}
+.pill.paid{background:var(--gold-soft);color:var(--gold)}
+.oacts{display:flex;gap:8px;flex-wrap:wrap}
+.oacts .btn{padding:9px 16px;font-size:14px}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+
+.toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--snow);padding:10px 18px;border-radius:999px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+.skel{background:var(--card);border-radius:var(--r);aspect-ratio:3/4.4;opacity:.7}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 0 8px}
+footer a{color:var(--pine);font-weight:700}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="brandtag">SYY(泱泱) 學習實驗室</span>
+    <h1 id="siteTitle">SYY 現貨書櫃</h1>
+    <p id="lede">手邊現貨・確認後就出貨</p>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="頁面">
+  <div class="wrap" role="tablist">
+    <button class="tab" role="tab" id="tabShop" aria-selected="true">📚 選書下單</button>
+    <button class="tab" role="tab" id="tabLookup" aria-selected="false">🔍 查詢／修改訂單</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div id="banners"></div>
+
+  <section id="viewShop">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" type="search" placeholder="搜尋書名、書號、出版社" autocomplete="off" aria-label="搜尋">
+      <button type="button" class="clrq" id="clrq" aria-label="清除搜尋" hidden>✕</button></label>
+    <div class="ages" id="ages"></div>
+    <div id="filters"></div>
+    <div id="shelf">
+      <div class="grid"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+    </div>
+  </section>
+
+  <section id="viewLookup" hidden>
+    <form class="lookup" id="lookupForm" novalidate>
+      <div class="box form">
+        <h3 style="margin:0">輸入下單時填的電話和 LINE 名稱</h3>
+        <div class="row2">
+          <div class="field"><label for="lkPhone">手機號碼</label><input id="lkPhone" inputmode="numeric" autocomplete="tel" placeholder="0912345678"></div>
+          <div class="field"><label for="lkLine">LINE 名稱</label><input id="lkLine" autocomplete="off" autocapitalize="off" placeholder="LINE 上顯示的名稱"></div>
+        </div>
+        <button class="btn pine block" id="lkBtn" type="submit">查詢訂單</button>
+        <div class="hint">這裡只會查到現貨書櫃的訂單；聖誕團購的訂單請到聖誕團購網站查詢。</div>
+      </div>
+      <div id="lookupResult"></div>
+    </form>
+  </section>
+
+  <footer>有任何問題請洽 <a href="https://line.me/R/ti/p/@970xwzkg" target="_blank" rel="noopener">SYY LINE官方@970xwzkg</a></footer>
+</main>
+
+<div class="cartbar" id="cartbar">
+  <div class="wrap">
+    <div class="cartsum" id="cartsum"><span class="hint">還沒選書，按 ＋ 加入</span></div>
+    <button class="btn" id="checkoutBtn" disabled>填寫資料</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ======================= 設定 =======================
+ * API_URL：和聖誕團購同一個 Google Apps Script 網址。
+ * 留空代表預覽模式，會使用下方的示範資料，訂單不會真的送出。
+ */
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbwm8X8IvATbQCd1QMluizt4fzKtKpgcRRiyL8CCWDViRG1I0N7ZnvUpZdtzt1jjsFWy/exec',
+};
+const LINE_OA = 'https://line.me/R/ti/p/@970xwzkg';
+
+// 年齡分區：書號第 2 個字母（SA01 → A）
+const AGES = [
+  { k:'A', label:'0–2 歲', sub:'硬頁書・翻翻書' },
+  { k:'B', label:'2–4 歲', sub:'生活習慣・情緒' },
+  { k:'C', label:'3–6 歲', sub:'故事・得獎經典' },
+];
+
+/* 預覽模式用的示範資料（取自現貨書單的一部分；正式版讀 Google「現貨書單」） */
+const DEMO = {
+  settings: { title:'SYY 現貨書櫃', notice:'這是預覽畫面，只放了現貨書單的一部分；「SA03 小波會數數」設成 0 本示範售完。正式版會讀取 Google 試算表「現貨書單」。',
+    open:true, isOpen:true, deadline:'', threshold:0, rate:0, minus:0, perMax:10 },
+  featured: ['聖誕','得獎經典','情緒','五味太郎','翻翻書','外文書'],
+  books: [
+    ["SA01", "小波在哪裡？", "上誼", "0–2 歲", 221, 7, "掀開翻頁找小波，躲貓貓好好玩", "翻翻書、硬頁書", 0],
+    ["SA02", "小波的生日派對", "上誼", "0–2 歲", 245, 5, "經典翻翻書，掀開有驚喜", "翻翻書、硬頁書", 0],
+    ["SA03", "小波會數數", "上誼", "0–2 歲", 245, 0, "邊翻邊數數", "翻翻書、硬頁書", 0],
+    ["SA04", "小波去散步", "上誼", "0–2 歲", 245, 6, "經典翻翻書，掀開有驚喜", "翻翻書、硬頁書", 0],
+    ["SA05", "小波去上學", "上誼", "0–2 歲", 245, 4, "經典翻翻書，掀開有驚喜", "翻翻書、硬頁書、上學", 0],
+    ["SA06", "小寶寶翻翻書（4冊盒裝）", "上誼", "0–2 歲", 408, 2, "上床囉、好朋友、衣服、小寶寶，一問一答學生活", "翻翻書、生活習慣", 0],
+    ["SA07", "在爸爸的背上", "信誼", "0–2 歲", 207, 1, "無尖角硬頁書，爸爸的溫暖背", "硬頁書、爸爸", 0],
+    ["SA08", "說不要的書！", "信誼", "0–2 歲", 194, 1, "陪孩子度過第一個反抗期", "情緒、硬頁書", 0],
+    ["SA09", "上學的書", "信誼", "0–2 歲", 194, 2, "上學前的心情準備", "情緒、硬頁書、上學", 0],
+    ["SA10", "藏在誰那兒呢？", "上誼", "0–2 歲", 144, 1, "找找看、數數看的遊戲書", "五味太郎、找找看", 1],
+    ["SA11", "誰吃掉了？", "上誼", "0–2 歲", 144, 1, "猜猜看，是誰吃掉的？", "五味太郎、找找看", 1],
+    ["SA12", "寶寶有聲書：豆豆玩音樂", "信誼", "0–2 歲", null, 1, "", "有聲書、兒歌", 0],
+    ["SA13", "寶寶有聲書：早安晚安", "信誼", "0–2 歲", null, 7, "", "有聲書、兒歌、生活習慣", 0],
+    ["SA20", "好餓的毛毛蟲", "上誼", "0–2 歲", null, 1, "", "艾瑞．卡爾、得獎經典", 0],
+    ["SA30", "會動的車輪玩具書：垃圾車", "風車", "0–2 歲", null, 3, "", "玩具書、交通工具", 0],
+    ["SA37", "That's not my... Santa", "Usborne", "0–2 歲", null, 3, "", "外文書、聖誕、觸摸書", 0],
+    ["SA38", "Bizzy Bear Whizzy Wheels: Digger", "Nosy Crow", "0–2 歲", null, 5, "", "外文書、交通工具", 0],
+    ["SA41", "Slide and Peek Santa", "Hector Dexet", "0–2 歲", null, 6, "", "外文書、聖誕、玩具書", 0],
+    ["SA43", "How Do You Feel?", "Priddy Books", "0–2 歲", null, 1, "", "外文書、情緒", 0],
+    ["SA58", "聖誕老公公來了！", "采實", "0–2 歲", null, 5, "", "硬頁書、聖誕", 1],
+    ["SA73", "聖誕歌謠", "風車", "0–2 歲", null, 5, "", "有聲書、兒歌、聖誕", 1],
+    ["SB01", "出發囉！刷牙號小火車", "青林", "2–4 歲", 180, 5, "刷牙變成好玩的遊戲", "生活習慣", 0],
+    ["SB02", "只有一點點", "青林", "2–4 歲", 194, null, "要當哥哥姊姊的孩子必讀", "手足、情緒", 0],
+    ["SB03", "鱷魚怕怕 牙醫怕怕", "上誼", "2–4 歲", 194, 1, "看牙醫不再怕", "生活習慣、五味太郎、幽默", 0],
+    ["SB04", "巴士到站了", "上誼", "2–4 歲", 194, 2, "五味太郎經典", "五味太郎", 0],
+    ["SB05", "怎麼說對不起", "上誼", "2–4 歲", 207, 1, "學會真心道歉", "情緒", 0],
+    ["SB06", "安東醫生的動物診所", "青林", "2–4 歲", 194, 6, "溫柔的動物醫生", "安東醫生", 0],
+    ["SB08", "猜猜我有多愛你", "上誼", "2–4 歲", 207, null, "說不完的愛，睡前共讀經典", "得獎經典、親子之愛", 1],
+    ["SB09", "小金魚逃走了", "信誼", "2–4 歲", 175, 3, "孩子的第一本視覺遊戲書", "五味太郎、找找看", 1],
+    ["SB10", "小雞逃跑記", "信誼", "2–4 歲", 175, 2, "小金魚之後，換小雞逃跑了", "五味太郎、找找看", 1],
+    ["SB11", "兔子先生去散步", "信誼", "2–4 歲", 175, 1, "跟著兔子先生認識生活標誌", "五味太郎", 1],
+    ["SB17", "愛吃青菜的鱷魚", "信誼", "2–4 歲", null, 4, "", "得獎經典、生活習慣", 0],
+    ["SB20", "窗外送來的禮物", "上誼", "2–4 歲", null, 4, "", "五味太郎、翻翻書", 0],
+    ["SB69", "Listen 找到了！聖誕節的祕密", "禾流文創", "2–4 歲", null, 7, "", "有聲書、聖誕、找找看", 1],
+    ["SB87", "晚安故事音樂會：天鵝湖", "禾流文創", "2–4 歲", null, 2, "", "有聲書", 1],
+    ["SB88", "小老鼠的閃亮聖誕夜", "采實", "2–4 歲", null, 10, "", "聖誕", 1],
+    ["SC01", "Guji-Guji（中英雙語）", "信誼", "3–6 歲", 238, 5, "愛、包容與自我認同", "得獎經典", 0],
+    ["SC02", "雪人（45 周年紀念版）", "上誼", "3–6 歲", 221, 2, "無字經典，冬天必讀", "得獎經典、冬天", 0],
+    ["SC03", "企鵝演奏會", "信誼", "3–6 歲", 259, 2, "信誼幼兒文學獎得獎作品", "得獎經典", 0],
+    ["SC04", "爸爸和我", "信誼", "3–6 歲", 194, null, "信誼幼兒文學獎得獎作品", "得獎經典、爸爸", 0],
+    ["SC05", "歡迎光臨雲溫泉", "青林", "3–6 歲", 242, 3, "洗掉全身煩惱的療癒繪本", "冬天、幽默", 0],
+    ["SC06", "鴨子外送有限公司", "青林", "3–6 歲", 220, 3, "爆笑鴨子大混亂", "幽默", 0],
+    ["SC07", "有貓，有貓，還有貓", "青林", "3–6 歲", 242, 3, "滿滿的貓，笑翻天", "幽默", 0],
+    ["SC08", "爸爸，我要月亮", "上誼", "3–6 歲", 286, 2, "艾瑞．卡爾經典，摺頁大驚喜", "爸爸、得獎經典", 1],
+    ["SC09", "星球上的列車", "上誼", "3–6 歲", 259, 2, "日本繪本賞得獎，生命與希望的旅程", "得獎經典", 1],
+    ["SC10", "老鼠國的果凍車", "信誼", "3–6 歲", 259, 3, "信誼幼兒文學獎首獎", "得獎經典、幽默", 1],
+    ["SC11", "貓咪看家", "上誼", "3–6 歲", 238, 2, "町田尚子珍藏版，附周年別冊", "幽默", 1],
+    ["SC24", "小恐龍大力：世界上最棒的聖誕樹！", "格林", "3–6 歲", null, 3, "", "聖誕", 0],
+    ["SC46", "我變成一隻噴火龍了！", "親子天下", "3–6 歲", null, 5, "", "賴馬、情緒", 1],
+  ].map((r, i) => ({ id:r[0], title:r[1], publisher:r[2], age:r[3], price:r[4], stock:r[5], tagline:r[6],
+    tags:String(r[7]).split('、').filter(Boolean), isNew:!!r[8], sort:i + 1, cover:'' })),
+};
+
+/* ======================= 狀態 ======================= */
+const S = {
+  settings: null, books: [], byId: {}, featured: [],
+  cart: {},            // {書號: 數量}
+  editing: null,       // {orderId, phone, lineId, prev:{書號:數量}}
+  q: '', age: 'all', tags: new Set(), pub: '', panel: '', inStock: false,
+  lookup: null,        // {phone, lineId}
+};
+const $ = s => document.querySelector(s);
+const money = n => '$' + Number(n || 0).toLocaleString('en-US');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+const DEMO_MODE = !CONFIG.API_URL;
+const CART_KEY = 'stock-cart';
+const PROFILE_KEY = 'xmas-profile';   // 和聖誕團購共用「記住上次填的資料」
+
+/* ======================= API ======================= */
+async function api(action, payload = {}) {
+  if (DEMO_MODE) return demoApi(action, payload);
+  try {
+    let res;
+    if (action === 'catalog') res = await fetch(CONFIG.API_URL + '?action=stockCatalog');
+    // 用 text/plain 送 JSON，避免 Apps Script 不支援的 CORS 預檢；type:'stock' 讓後台分辨現貨單
+    else res = await fetch(CONFIG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action, type: 'stock' }, payload)) });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: '網路連線不穩，請稍後再試一次' };
+  }
+}
+
+/* 預覽模式：在瀏覽器裡模擬後台 */
+function demoApi(action, p) {
+  const orders = store.get('stock-demo-orders', []);
+  const save = () => store.set('stock-demo-orders', orders);
+  const np = s => String(s||'').replace(/\D/g,''), nl = s => String(s||'').replace(/\s+/g,'').toLowerCase();
+  const sold = ex => { const m = {}; orders.filter(o => o.status==='有效' && o.id!==ex).forEach(o => o.items.forEach(i => m[i.id]=(m[i.id]||0)+i.qty)); return m; };
+  const left = (b, sd) => b.stock == null ? null : Math.max(0, b.stock - (sd[b.id]||0));
+  return new Promise(resolve => setTimeout(() => {
+    if (action === 'catalog') {
+      const sd = sold();
+      resolve({ ok:true, settings: DEMO.settings, featured: DEMO.featured, books: DEMO.books.map(b => Object.assign({}, b, { remaining: left(b, sd) })) });
+    } else if (action === 'submit') {
+      const o = p.order, ed = p.edit;
+      let existing = ed ? orders.find(x => x.id === ed.orderId) : null;
+      let addonOf = existing ? (existing.addonOf || '') : '';
+      if (!ed) { const mine = orders.filter(x => x.status==='有效' && np(x.phone)===np(o.phone)), dup = mine.find(x => !x.paid);
+        if (dup) return resolve({ ok:false, code:'DUPLICATE', dupId: dup.id, error:'這支電話已經有一張還沒付款的訂單（'+dup.id+'），可以把這次選的書直接加進去' });
+        if (mine.length) addonOf = '追加單（原單 ' + mine.map(x => x.id).join('、') + '）'; }
+      const sd = sold(existing && existing.id);
+      const lines = [];
+      for (const it of o.items) { const b = DEMO.books.find(x => x.id===it.id), l = left(b, sd);
+        if (l != null && it.qty > l) return resolve({ ok:false, code:'STOCK', error: l ? '「'+b.title+'」只剩 '+l+' 本，請調整數量' : '「'+b.title+'」已售完，請洽SYY LINE官方@970xwzkg' });
+        lines.push({ id:b.id, title:b.title, price:b.price, list:0, qty:it.qty }); }
+      const t = totals(lines);
+      const id = existing ? existing.id : 'ST' + String(orders.length+1).padStart(4,'0');
+      const rec = Object.assign({ id, createdAt: existing ? existing.createdAt : new Date().toISOString(), status:'有效', paid:false, picked:false },
+        o, { addonOf, items: lines, qty:t.qty, listSum:t.listSum, subtotal:t.subtotal, discount:0, total:t.total });
+      if (existing) orders[orders.indexOf(existing)] = rec; else orders.push(rec);
+      save(); resolve({ ok:true, order: rec });
+    } else if (action === 'lookup') {
+      resolve({ ok:true, orders: orders.filter(o => np(o.phone)===np(p.phone) && nl(o.lineId)===nl(p.lineId)).reverse() });
+    } else if (action === 'cancel') {
+      const o = orders.find(x => x.id===p.orderId); if (o) o.status='已取消'; save(); resolve({ ok:true });
+    }
+  }, 350));
+}
+
+/* ======================= 計算 ======================= */
+function totals(lines) {
+  const qty = lines.reduce((a,l) => a + l.qty, 0);
+  const subtotal = lines.reduce((a,l) => a + l.price * l.qty, 0);
+  return { qty, listSum: subtotal, subtotal, discount: 0, total: subtotal };
+}
+function cartLines() {
+  return Object.entries(S.cart).filter(([,q]) => q > 0).map(([id,q]) => { const b = S.byId[id]; return b && b.price && { id, title:b.title, price:b.price, list:0, qty:q }; }).filter(Boolean);
+}
+function maxFor(b) {
+  if (!b.price) return 0;
+  const per = (S.settings && S.settings.perMax) || 10;
+  if (b.remaining == null) return per;
+  const prev = (S.editing && S.editing.prev[b.id]) || 0;
+  return Math.min(per, b.remaining + prev);
+}
+const ageKey = b => { const a = AGES.find(x => x.label.replace(/\s/g,'') === String(b.age).replace(/\s/g,'').replace('-', '–')); return a ? a.k : String(b.id).charAt(1).toUpperCase(); };
+const ageColor = k => ({ A:'var(--A)', B:'var(--B)', C:'var(--C)' })[k] || 'var(--pine)';
+const pubName = b => (!b.publisher || b.publisher === '—' || b.publisher === '待確認') ? '其他' : b.publisher;
+const isOut = b => b.remaining === 0;
+
+/* ======================= 畫面 ======================= */
+function coverHtml(b) {
+  return b.cover
+    ? `<img src="${esc(b.cover)}" alt="${esc(b.title)} 封面" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:this.alt.replace(/ 封面$/,'')}))">`
+    : `<div class="ph">${esc(b.title)}</div>`;
+}
+function flagHtml(b) {
+  if (isOut(b)) return '<span class="flag out">售完</span>';
+  if (b.remaining != null && b.remaining <= 3) return `<span class="flag">剩 ${b.remaining} 本</span>`;
+  if (b.isNew) return '<span class="flag new">新到貨</span>';
+  return '';
+}
+function priceHtml(b) {
+  return b.price ? `<span class="price num"><small>$</small>${b.price}</span>` : '<span class="ask">價格確認中・私訊詢價</span>';
+}
+const SOLD_HTML = `<div class="soldbtn">已售完</div><a class="soldnote" href="${LINE_OA}" target="_blank" rel="noopener">請洽SYY LINE官方@970xwzkg</a>`;
+
+function countBy(fn) {
+  const m = new Map();
+  S.books.forEach(b => [].concat(fn(b)).forEach(k => k && m.set(k, (m.get(k) || 0) + 1)));
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-Hant'));
+}
+function visible() {
+  const q = S.q.trim().toLowerCase();
+  return S.books.filter(b => {
+    if (S.age !== 'all' && ageKey(b) !== S.age) return false;
+    if (S.inStock && isOut(b)) return false;
+    if (S.tags.size && ![...S.tags].every(t => (b.tags || []).includes(t))) return false;
+    if (S.pub && pubName(b) !== S.pub) return false;
+    if (q && !(b.id + ' ' + b.title + ' ' + b.publisher).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderAges() {
+  const n = k => S.books.filter(b => ageKey(b) === k).length;
+  $('#ages').innerHTML = `<button class="age ${S.age==='all'?'on':''}" data-act="age" data-k="all">全部<small>${S.books.length} 種</small></button>` +
+    AGES.map(a => `<button class="age ${S.age===a.k?'on':''}" style="--c:${ageColor(a.k)}" data-act="age" data-k="${a.k}">${esc(a.label)}<small>${n(a.k)} 種</small></button>`).join('');
+}
+
+function renderFilters() {
+  const tagC = new Map(countBy(b => b.tags || []));
+  const pubs = countBy(pubName);
+  const hot = (S.featured || []).filter(t => tagC.get(t));    // 沒有書的主題不顯示
+  let h = '';
+  if (hot.length) h += `<section class="hot"><div class="hot-h">SYY 社群熱購推薦</div><div class="hotchips">` +
+    hot.map(t => `<button class="hotchip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}<small>${tagC.get(t)} 種</small></button>`).join('') + `</div></section>`;
+  const more = [...tagC.entries()].filter(([t]) => !hot.includes(t));
+  const nt = [...S.tags].filter(t => !hot.includes(t)).length;
+  h += `<div class="frow">` +
+    (more.length ? `<button class="drop ${S.panel==='tag'?'open':''} ${nt?'has':''}" data-act="panel" data-p="tag">更多主題${nt?' · '+nt:''} <i>▼</i></button>` : '') +
+    `<button class="drop ${S.panel==='pub'?'open':''} ${S.pub?'has':''}" data-act="panel" data-p="pub">${S.pub ? esc(S.pub) : '出版社'} <i>▼</i></button>` +
+    `<button class="chip dash ${S.inStock?'on':''}" data-act="instock" aria-pressed="${S.inStock}">只看有貨</button></div>`;
+  if (S.panel === 'tag') h += `<div class="panel"><div class="chipwrap">${more.map(([t,n]) => `<button class="chip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)} <small>${n}</small></button>`).join('')}</div></div>`;
+  if (S.panel === 'pub') h += `<div class="panel"><div class="pubgrid">${pubs.map(([p,n]) => `<button class="pubbtn ${S.pub===p?'on':''}" data-act="pub" data-p="${esc(p)}">${esc(p)}<small>${n} 種</small></button>`).join('')}</div></div>`;
+  const act = [...[...S.tags].map(t => `<button class="x2" data-act="tag" data-t="${esc(t)}">${esc(t)} ✕</button>`),
+    ...(S.pub ? [`<button class="x2" data-act="unpub">${esc(S.pub)} ✕</button>`] : []),
+    ...(S.inStock ? [`<button class="x2" data-act="instock">只看有貨 ✕</button>`] : []),
+    ...(S.q.trim() ? [`<button class="x2" data-act="unq">「${esc(S.q.trim())}」 ✕</button>`] : [])];
+  if (act.length) h += `<div class="active">篩選中：${act.join('')}<button class="clr" data-act="clear">全部清除</button></div>`;
+  $('#filters').innerHTML = h;
+}
+
+function cardHtml(b) {
+  const q = S.cart[b.id] || 0, max = maxFor(b), sold = b.price && max <= 0 && q === 0;
+  const canOrder = S.settings.isOpen;
+  const control = !b.price ? ''
+    : sold ? SOLD_HTML
+    : !canOrder ? ''
+    : `<div class="stepper ${q?'on':''}" data-id="${esc(b.id)}">
+        <button data-d="-1" aria-label="減少 ${esc(b.title)}" ${q<=0?'disabled':''}>−</button>
+        <span class="q num" aria-live="polite">${q}</span>
+        <button data-d="1" aria-label="增加 ${esc(b.title)}" ${q>=max?'disabled':''}>＋</button>
+      </div>`;
+  return `<article class="book ${isOut(b)?'soldout':''}" style="--c:${ageColor(ageKey(b))}">
+    <button class="cover" data-detail="${esc(b.id)}" aria-label="查看 ${esc(b.id + ' ' + b.title)}">${coverHtml(b)}<span class="code">${esc(b.id)}</span>${flagHtml(b)}</button>
+    <div class="info">
+      ${pubName(b) !== '其他' ? `<div class="pub">${esc(b.publisher)}</div>` : ''}
+      <h3 class="title">${esc(b.title)}</h3>
+      ${b.tagline ? `<div class="tagline">${esc(b.tagline)}</div>` : ''}
+      <div class="prices">${priceHtml(b)}</div>
+      ${control}
+    </div>
+  </article>`;
+}
+
+function renderShelf() {
+  const vis = visible();
+  let out = '';
+  (S.age === 'all' ? AGES : AGES.filter(a => a.k === S.age)).forEach(a => {
+    const list = vis.filter(b => ageKey(b) === a.k);
+    if (!list.length) return;
+    out += `<div class="sec" style="--c:${ageColor(a.k)}"><i class="dot"></i><h2>${a.k} 區・${esc(a.label)}</h2><span>${esc(a.sub)}・${list.length} 種</span></div>
+      <div class="grid">${list.map(cardHtml).join('')}</div>`;
+  });
+  const orphan = S.age === 'all' ? vis.filter(b => !AGES.some(a => a.k === ageKey(b))) : [];
+  if (orphan.length) out += `<div class="sec"><h2>其他</h2></div><div class="grid">${orphan.map(cardHtml).join('')}</div>`;
+  if (!out) out = `<div class="empty">找不到符合的書，換個關鍵字或清除篩選看看。<br><br><button class="btn ghost" data-act="clear">清除篩選</button></div>`;
+  $('#shelf').innerHTML = out;
+}
+
+function renderCart() {
+  const lines = cartLines(), t = totals(lines);
+  $('#cartsum').innerHTML = t.qty
+    ? `<div>已選 <b class="num" style="color:var(--ink);font-size:15px">${t.qty}</b> 本　<b class="num">${money(t.total)}</b></div>`
+    : `<span class="hint">${S.settings && !S.settings.isOpen ? '現貨書櫃暫停下單中' : '還沒選書，按 ＋ 加入'}</span>`;
+  $('#checkoutBtn').disabled = !t.qty || !S.settings.isOpen;
+  $('#checkoutBtn').textContent = S.editing ? '確認修改' : '填寫資料';
+  store.set(CART_KEY, S.editing ? {} : S.cart);
+}
+
+function renderBanners() {
+  const st = S.settings, out = [];
+  if (DEMO_MODE) out.push(`<div class="banner demo">👀 <span>預覽模式：訂單只會存在這台裝置，不會真的送出。</span></div>`);
+  if (!st.isOpen) out.push(`<div class="banner closed">⛔ 現貨書櫃暫停下單中。已下單的朋友可以到「查詢訂單」確認內容。</div>`);
+  if (S.editing) out.push(`<div class="banner edit">✏️ <span>正在修改訂單 <b>${esc(S.editing.orderId)}</b>，調整數量後按「確認修改」。</span><button class="link" id="quitEdit">放棄修改</button></div>`);
+  if (st.notice) out.push(`<div class="banner notice">${esc(st.notice)}</div>`);
+  $('#banners').innerHTML = out.join('');
+  const q = $('#quitEdit'); if (q) q.onclick = quitEdit;
+}
+
+function renderLede() {
+  const n = S.books.filter(b => !isOut(b)).length;
+  $('#lede').innerHTML = `手邊現貨 <b class="num">${n}</b> 種・確認後就出貨`;
+}
+
+function renderShop() { renderAges(); renderFilters(); renderShelf(); }
+function renderAll() { renderBanners(); renderLede(); renderShop(); renderCart(); }
+
+/* ======================= 互動 ======================= */
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-act]');
+  if (a) {
+    const act = a.dataset.act;
+    if (act === 'age') S.age = a.dataset.k;
+    else if (act === 'tag') { const t = a.dataset.t; S.tags.has(t) ? S.tags.delete(t) : S.tags.add(t); }
+    else if (act === 'panel') S.panel = S.panel === a.dataset.p ? '' : a.dataset.p;
+    else if (act === 'pub') { S.pub = S.pub === a.dataset.p ? '' : a.dataset.p; S.panel = ''; }   // 選了自動收合
+    else if (act === 'unpub') S.pub = '';
+    else if (act === 'instock') S.inStock = !S.inStock;
+    else if (act === 'unq') setQ('');
+    else if (act === 'clear') { S.tags.clear(); S.pub = ''; S.inStock = false; S.age = 'all'; S.panel = ''; setQ(''); }
+    renderShop(); return;
+  }
+  const stepBtn = e.target.closest('.stepper button');
+  if (stepBtn) {
+    const id = stepBtn.closest('.stepper').dataset.id, b = S.byId[id];
+    const q = Math.max(0, Math.min(maxFor(b), (S.cart[id] || 0) + Number(stepBtn.dataset.d)));
+    if (q) S.cart[id] = q; else delete S.cart[id];
+    if (Number(stepBtn.dataset.d) > 0 && q >= maxFor(b) && b.remaining != null && q < (S.settings.perMax||10)) toast('這本書只剩這些囉');
+    renderShelf(); renderCart(); return;
+  }
+  const det = e.target.closest('[data-detail]');
+  if (det) { openDetail(det.dataset.detail); return; }
+});
+
+let qTimer;
+function setQ(v) { S.q = v; $('#q').value = v; $('#clrq').hidden = !v; }
+$('#q').addEventListener('input', e => {
+  S.q = e.target.value; $('#clrq').hidden = !S.q;
+  clearTimeout(qTimer); qTimer = setTimeout(() => { renderFilters(); renderShelf(); }, 220);
+});
+$('#clrq').onclick = () => { setQ(''); renderShop(); $('#q').focus(); };
+
+function setTab(which) {
+  $('#tabShop').setAttribute('aria-selected', which === 'shop');
+  $('#tabLookup').setAttribute('aria-selected', which === 'lookup');
+  $('#viewShop').hidden = which !== 'shop';
+  $('#viewLookup').hidden = which !== 'lookup';
+  $('#cartbar').hidden = which !== 'shop';
+  window.scrollTo({ top: 0 });
+}
+$('#tabShop').onclick = () => setTab('shop');
+$('#tabLookup').onclick = () => setTab('lookup');
+
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2400); }
+
+/* 抽屜 */
+function openSheet(title, html) {
+  $('#sheet').innerHTML = `<div class="sheethead"><h2>${title}</h2><button class="x" id="sheetX" aria-label="關閉">×</button></div><div class="sheetbody">${html}</div>`;
+  $('#overlay').hidden = false; document.body.style.overflow = 'hidden';
+  $('#sheetX').onclick = closeSheet;
+}
+function closeSheet() { $('#overlay').hidden = true; document.body.style.overflow = ''; }
+$('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay') closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#overlay').hidden) closeSheet(); });
+
+function openDetail(id) {
+  const b = S.byId[id], k = ageKey(b);
+  const stockTxt = isOut(b) ? '已售完' : b.remaining != null && b.remaining <= 3 ? `剩 ${b.remaining} 本` : '有現貨';
+  openSheet('書籍介紹', `<div class="detail" style="--c:${ageColor(k)}">
+    <div class="bigc">${b.cover ? `<img src="${esc(b.cover)}" alt="${esc(b.title)} 封面">` : `<div class="cover" style="position:absolute;inset:0;aspect-ratio:auto;background:none"><div class="ph" style="font-size:22px">${esc(b.title)}</div></div>`}<span class="code">${esc(b.id)}</span></div>
+    <h3 class="title" style="font-size:18px">${esc(b.title)}</h3>
+    ${b.tagline ? `<div class="tagline">${esc(b.tagline)}</div>` : ''}
+    <div class="kv">${pubName(b) !== '其他' ? `<span>${esc(b.publisher)}</span>` : ''}<span>${esc(b.age || '')}</span><span>${stockTxt}</span>${(b.tags||[]).map(t => `<span>${esc(t)}</span>`).join('')}</div>
+    <div class="prices">${priceHtml(b)}</div>
+    ${b.price && isOut(b) ? SOLD_HTML : ''}
+  </div>`);
+}
+
+/* ======================= 結帳 ======================= */
+const FIELDS = [
+  ['name','真實姓名','text','name','王小明'],
+  ['nick','社群暱稱','text','nickname','在 LINE 群裡的暱稱'],
+  ['lineId','LINE 名稱','text','off','LINE 上顯示的名稱'],
+  ['phone','手機號碼','tel','tel','0912345678'],
+];
+function orderBoxHtml(lines) {
+  const t = totals(lines);
+  return `<div class="box"><h3>訂購內容</h3><div class="lines">
+    ${lines.map(l => `<div class="ln"><span class="t"><em>${esc(l.id)}</em>${esc(l.title)}</span><span class="q num">×${l.qty}</span><span class="a num">${money(l.price*l.qty)}</span></div>`).join('')}
+    </div><div class="tot">
+      <div class="ln big"><span class="t">共 ${t.qty} 本・應付金額</span><span class="a num">${money(t.total)}</span></div>
+    </div></div>`;
+}
+
+$('#checkoutBtn').onclick = () => {
+  const lines = cartLines(); if (!lines.length) return;
+  const saved = S.editing ? S.editing.form : store.get(PROFILE_KEY, {});
+  const v = k => esc(saved[k] || '');
+  openSheet(S.editing ? '確認修改' : '填寫訂購資料', `
+    ${orderBoxHtml(lines)}
+    <form class="box form" id="orderForm" novalidate>
+      <h3 style="margin:0">訂購人資料</h3>
+      <div class="row2">
+        ${FIELDS.map(([k,l,t,ac,ph]) => `<div class="field" data-f="${k}"><label for="f_${k}">${l} <span class="req">*</span></label>
+          <input id="f_${k}" name="${k}" type="${t}" ${t==='tel'?'inputmode="numeric"':''} autocomplete="${ac}" ${k==='lineId'?'autocapitalize="off"':''} placeholder="${ph}" value="${v(k)}"><div class="msg"></div></div>`).join('')}
+      </div>
+      <div class="field"><label for="f_note">備註</label><textarea id="f_note" name="note" rows="2" placeholder="想跟團主說的話（選填）">${S.editing ? v('note') : ''}</textarea></div>
+      <div class="hp" aria-hidden="true"><input id="f_website" name="website" tabindex="-1" autocomplete="off"></div>
+      <div id="formErr"></div>
+      <button class="btn block" type="submit" id="submitBtn">${S.editing ? '送出修改' : '送出訂單'}</button>
+      <div class="hint" style="text-align:center">送出後可以在「查詢訂單」用電話和 LINE 名稱 修改或取消</div>
+    </form>`);
+  const form = $('#orderForm');
+  form.addEventListener('input', () => { if (!S.editing) store.set(PROFILE_KEY, Object.assign(readForm(form), { note: '' })); });
+  form.addEventListener('submit', e => { e.preventDefault(); submitOrder(form); });
+};
+
+function readForm(form) {
+  const o = {}; ['name','nick','lineId','phone','note','website'].forEach(k => o[k] = (form.elements[k]?.value || '').trim()); return o;
+}
+function validate(o) {
+  const err = {};
+  if (!o.name) err.name = '請填寫真實姓名';
+  if (!o.nick) err.nick = '請填寫社群暱稱，方便團主對照';
+  if (!o.lineId) err.lineId = '請填寫 LINE 名稱';
+  const ph = o.phone.replace(/\D/g, '');
+  if (!/^09\d{8}$/.test(ph)) err.phone = '請填 09 開頭的 10 碼手機號碼';
+  return err;
+}
+async function submitOrder(form) {
+  const o = readForm(form), err = validate(o);
+  form.querySelectorAll('.field[data-f]').forEach(f => { const k = f.dataset.f; f.classList.toggle('err', !!err[k]); f.querySelector('.msg').textContent = err[k] || ''; });
+  $('#formErr').innerHTML = '';
+  if (Object.keys(err).length) { form.querySelector('.field.err input')?.focus(); return; }
+  const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = '送出中…';
+  const payload = { order: Object.assign({}, o, { phone: o.phone.replace(/\D/g,''),
+    items: cartLines().map(l => ({ id: l.id, qty: l.qty })) }) };
+  if (S.editing) payload.edit = { orderId: S.editing.orderId, phone: S.editing.phone, lineId: S.editing.lineId };
+  const r = await api('submit', payload);
+  if (!r.ok) {
+    btn.disabled = false; btn.textContent = S.editing ? '送出修改' : '送出訂單';
+    $('#formErr').innerHTML = `<div class="formerr">${esc(r.error || '送出失敗，請再試一次')}</div>`;
+    if (r.code === 'DUPLICATE') {
+      $('#formErr').insertAdjacentHTML('beforeend', `<button type="button" class="btn pine block" id="mergeBtn" style="margin-top:8px">➕ 把這次選的書加到原訂單 ${esc(r.dupId || '')}</button>
+        <div class="hint" style="text-align:center">原訂單付款後，就可以另外下「追加單」</div>`);
+      $('#mergeBtn').onclick = () => mergeIntoOrder(payload.order.phone, o.lineId, r.dupId, $('#mergeBtn'));
+    }
+    if (r.code === 'STOCK') reloadCatalog();
+    return;
+  }
+  const wasEdit = !!S.editing;
+  store.set(PROFILE_KEY, Object.assign(readForm(form), { note: '' }));
+  S.cart = {}; S.editing = null; store.set(CART_KEY, {});
+  showDone(r.order, wasEdit);
+  reloadCatalog();
+}
+
+function summaryText(o) {
+  const lines = o.items.map(i => `・${i.id} ${i.title} ×${i.qty}　${money(i.price*i.qty)}`).join('\n');
+  return `📚 ${S.settings.title}｜${o.id}\n` +
+    `暱稱：${o.nick}\n${lines}\n` +
+    `共 ${o.qty} 本｜應付 ${money(o.total)}` +
+    (o.addonOf ? `\n📌 ${o.addonOf}` : '');
+}
+function showDone(o, wasEdit) {
+  const text = summaryText(o);
+  openSheet(wasEdit ? '修改完成' : '下單成功', `<div class="done">
+    <p class="big">${wasEdit ? '訂單已更新 ✏️' : '謝謝你的訂購 📚'}</p>
+    <span class="oid">訂單編號 ${esc(o.id)}</span>
+    ${o.addonOf ? `<p class="hint" style="margin:6px 0 0">📌 這是${esc(o.addonOf)}，請另外付這張的款項</p>` : ''}
+    <p class="hint" style="margin:6px 0 0">把下面的摘要複製貼回 LINE 群，團主就能快速確認</p>
+    <pre class="summary" id="sumText">${esc(text)}</pre>
+    <button class="btn pine block" id="copyBtn">📋 複製訂單摘要</button>
+    <button class="btn ghost block" id="doneBtn">繼續逛逛</button>
+  </div>`);
+  $('#copyBtn').onclick = async () => {
+    try { await navigator.clipboard.writeText(text); toast('已複製，去 LINE 貼上吧！'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#sumText')); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); toast('已複製，去 LINE 貼上吧！'); } catch (e2) { toast('請長按文字複製'); } }
+  };
+  $('#doneBtn').onclick = () => { closeSheet(); setTab('shop'); };
+}
+
+/* ======================= 查詢 / 修改 / 取消 ======================= */
+$('#lookupForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const phone = $('#lkPhone').value.replace(/\D/g,''), lineId = $('#lkLine').value.trim();
+  if (!phone || !lineId) { $('#lookupResult').innerHTML = '<div class="formerr">請輸入電話和 LINE 名稱</div>'; return; }
+  S.lookup = { phone, lineId };
+  await doLookup();
+});
+async function doLookup() {
+  const out = $('#lookupResult'), btn = $('#lkBtn');
+  btn.disabled = true; btn.textContent = '查詢中…';
+  const r = await api('lookup', S.lookup);
+  btn.disabled = false; btn.textContent = '查詢訂單';
+  if (!r.ok) { out.innerHTML = `<div class="formerr">${esc(r.error)}</div>`; return; }
+  if (!r.orders.length) { out.innerHTML = '<p class="empty">找不到現貨訂單。請確認電話和 LINE 名稱 是否和下單時一樣。</p>'; return; }
+  S.lookupOrders = r.orders;
+  out.innerHTML = r.orders.map(o => {
+    const active = o.status === '有效', canEdit = active && !o.paid && S.settings.isOpen;
+    return `<div class="order">
+      <div class="ohead"><b>${esc(o.id)}</b>
+        <span class="pill ${active?'ok':'no'}">${esc(o.status)}</span>
+        ${o.paid?'<span class="pill paid">已付款</span>':''}${o.picked?'<span class="pill paid">已取書</span>':''}${o.addonOf?'<span class="pill no">追加單</span>':''}</div>
+      <div class="lines">${o.items.map(i => `<div class="ln"><span class="t"><em>${esc(i.id)}</em>${esc(i.title)}</span><span class="q num">×${i.qty}</span><span class="a num">${money(i.price*i.qty)}</span></div>`).join('')}</div>
+      <div class="tot"><div class="ln big"><span class="t">應付金額</span><span class="a num">${money(o.total)}</span></div></div>
+      ${canEdit ? `<div class="oacts"><button class="btn pine" data-edit="${esc(o.id)}">修改／加書</button><button class="btn ghost" data-cancel="${esc(o.id)}">取消訂單</button></div>`
+        : active && o.paid ? `<div class="hint">已付款的訂單不能修改。${S.settings.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單。' : '如需調整請私訊團主。'}</div>` : ''}
+      ${active ? `<button class="btn ghost" data-copy="${esc(o.id)}" style="justify-self:start;padding:8px 14px;font-size:13.5px">📋 複製摘要</button>` : ''}
+    </div>`;
+  }).join('');
+}
+$('#lookupResult').addEventListener('click', async e => {
+  const ed = e.target.closest('[data-edit]'), cc = e.target.closest('[data-cancel]'), cp = e.target.closest('[data-copy]');
+  if (ed) startEdit(S.lookupOrders.find(o => o.id === ed.dataset.edit));
+  if (cp) { const o = S.lookupOrders.find(x => x.id === cp.dataset.copy);
+    try { await navigator.clipboard.writeText(summaryText(o)); toast('已複製訂單摘要'); } catch (err) { toast('複製失敗，請在下單成功畫面長按複製'); } }
+  if (cc) {
+    if (cc.dataset.sure !== '1') { cc.dataset.sure = '1'; cc.textContent = '確定要取消？再按一次'; cc.style.borderColor = 'var(--berry)'; cc.style.color = 'var(--berry)'; return; }
+    cc.disabled = true; cc.textContent = '取消中…';
+    const r = await api('cancel', Object.assign({ orderId: cc.dataset.cancel }, S.lookup));
+    if (!r.ok) { toast(r.error); cc.disabled = false; cc.textContent = '取消訂單'; return; }
+    toast('訂單已取消'); doLookup(); reloadCatalog();
+  }
+});
+function startEdit(o) {
+  S.editing = { orderId: o.id, phone: S.lookup.phone, lineId: S.lookup.lineId, prev: {},
+    form: { name:o.name, nick:o.nick, lineId:o.lineId, phone:o.phone, note:o.note } };
+  S.cart = {};
+  o.items.forEach(i => { S.editing.prev[i.id] = i.qty; if (S.byId[i.id]) S.cart[i.id] = i.qty; });
+  setTab('shop'); renderAll(); toast('已載入訂單，調整後按「確認修改」');
+}
+/* 重複下單時：把這次購物車的書併進原本還沒付款的現貨訂單 */
+async function mergeIntoOrder(phone, lineId, orderId, btn) {
+  btn.disabled = true; btn.textContent = '載入原訂單中…';
+  const extra = Object.assign({}, S.cart);
+  const r = await api('lookup', { phone, lineId });
+  const o = r.ok && r.orders.find(x => x.id === orderId && x.status === '有效' && !x.paid);
+  if (!o) {
+    btn.disabled = false; btn.textContent = '➕ 把這次選的書加到原訂單';
+    $('#formErr').innerHTML = `<div class="formerr">找不到原訂單 ${esc(orderId || '')}。如果 LINE 名稱 和上次填的不一樣，請到「查詢訂單」用上次的名稱查詢後按「修改／加書」。</div>`;
+    return;
+  }
+  closeSheet();
+  S.lookup = { phone, lineId };
+  startEdit(o);
+  Object.keys(extra).forEach(id => { const b = S.byId[id]; if (b) S.cart[id] = Math.min((S.cart[id] || 0) + extra[id], maxFor(b)); });
+  renderAll();
+  toast(`已把書加進訂單 ${o.id}，確認數量後按「確認修改」`);
+}
+function quitEdit() { S.editing = null; S.cart = store.get(CART_KEY, {}); renderAll(); }
+
+/* ======================= 啟動 ======================= */
+async function reloadCatalog() {
+  const r = await api('catalog');
+  if (!r.ok) { $('#shelf').innerHTML = `<p class="empty">${esc(r.error || '書單載入失敗')}，請重新整理頁面</p>`; return false; }
+  S.settings = r.settings; S.books = r.books || []; S.featured = r.featured || []; S.byId = {};
+  S.books.forEach(b => S.byId[b.id] = b);
+  Object.keys(S.cart).forEach(id => { const b = S.byId[id]; const q = b ? Math.min(S.cart[id], Math.max(maxFor(b), 0)) : 0; if (q) S.cart[id] = q; else delete S.cart[id]; });
+  document.title = S.settings.title; $('#siteTitle').textContent = S.settings.title;
+  renderAll();
+  return true;
+}
+(async () => {
+  S.cart = store.get(CART_KEY, {});
+  await reloadCatalog();
+})();
+</script>
+</body>
+</html>
