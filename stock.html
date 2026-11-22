@@ -3,81 +3,82 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SYY 現貨書櫃</title>
+<title>SYY 精選親子書櫃</title>
 <meta name="description" content="SYY 學習實驗室手邊現貨童書，線上選書下單，確認後就出貨；聖誕選書團購也能一起下單。">
 <meta property="og:type" content="website">
-<meta property="og:title" content="📚 SYY 現貨書櫃｜手邊現貨・確認後就出貨">
-<meta property="og:description" content="上誼、信誼、禾流、青林等各大出版社童書現貨，聖誕選書團購也能一起下單，點我選書！">
-<meta property="og:image" content="https://syylearninglab.github.io/xmas-books/og-stock.png?v=3">
+<meta property="og:title" content="SYY精選親子書櫃">
+<meta property="og:description" content="讀過才敢上架的好書，禾流、信誼、采實……和 SYY 一起充實您的親子書櫃，點我選書！">
+<meta property="og:image" content="https://syylearninglab.github.io/xmas-books/og-stock.png?v=4">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Caveat:wght@500;700&display=swap">
 <style>
-/* Layout: 溫暖書房風。深藍頁首＋木頭書架 → 搜尋＋年齡分區＋熱購主題 → 依分區（含聖誕選書）分段的書卡 → 深藍底部購物車列
-   和聖誕團購頁（松綠＋莓紅＋雪花）刻意做出區別：米色紙張底、深藍墨水、暖橘重點色、明體標題、書架木條 */
+/* Layout: 水彩＋鉛筆線稿、米白紙張、旅行手帳風。插畫頁首 → 搜尋＋年齡索引標籤＋熱購郵票 → 依分區分段的拍立得書卡 → 淺色紙條購物車列
+   色調取自頁首插畫：暖米紙、深咖啡墨水、栗棕重點色、粉紅底線與紙膠帶、聖誕綠、丹寧藍。只做淺色（手帳風不做深色模式）
+   變數名稱沿用舊版（navy＝主要深色、wood＝紙張木色），程式裡產生的 class 不用改 */
 :root{
-  --paper:#F7F1E6; --card:#FFFDF8; --ink:#22283A; --muted:#6B6558; --line:#E6DCC9;
-  --navy:#24324F; --navy-ink:#FBF6EC; --navy-soft:#E7EAF1;
-  --accent:#C95A22; --accent-ink:#FFFFFF; --accent-soft:#FBE8DA;
-  --wood:#9A6B43; --wood-soft:#F1E4D2;
-  --A:#557F4B; --B:#3A6898; --C:#B4532F; --onacc:#FFFFFF;
-  --x-pine:#1E5B44; --x-berry:#C22E3A; --x-soft:#E6EFE9;
-  --shadow:0 1px 2px rgba(60,40,20,.06),0 3px 10px rgba(60,40,20,.06);
+  --paper:#FCF2E4; --card:#FFFAF2; --ink:#4A3B30; --muted:#857363; --line:#EBDDC9; --pencil:#8C7A69;
+  --navy:#5B4636; --navy-ink:#FFF8EE; --navy-soft:#F1E6D6;
+  --accent:#B9724A; --accent-ink:#FFFFFF; --accent-soft:#F7E3D3;
+  --wood:#A9825F; --wood-soft:#F3E8D8;
+  --blush:#E9B9B3; --blush-soft:#F9E6E2;
+  --A:#5A8160; --B:#5E7699; --C:#BF6F62; --onacc:#FFFFFF;
+  --x-pine:#4F7A55; --x-berry:#C0483F; --x-soft:#E8EFE4;
+  --tape:rgba(233,185,179,.55);
+  --shadow:0 1px 3px rgba(80,60,40,.1),0 6px 14px rgba(80,60,40,.05);
   --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-  --r:8px;
+  --f-hand:"Caveat","Segoe Print",cursive;
+  --r:4px;
+  color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#13161E; --card:#1C202B; --ink:#EDE7DB; --muted:#A49D8F; --line:#2E3342;
-  --navy:#2E3E62; --navy-ink:#FBF6EC; --navy-soft:#222A3D;
-  --accent:#EE8A4C; --accent-ink:#1A1208; --accent-soft:#3B2618;
-  --wood:#C79560; --wood-soft:#2C251C;
-  --A:#8DBE80; --B:#82AAD8; --C:#E68D6C; --onacc:#13161E;
-  --x-pine:#56A984; --x-berry:#FF7A80; --x-soft:#1B2B24;
-  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --paper:#13161E; --card:#1C202B; --ink:#EDE7DB; --muted:#A49D8F; --line:#2E3342;
-  --navy:#2E3E62; --navy-ink:#FBF6EC; --navy-soft:#222A3D;
-  --accent:#EE8A4C; --accent-ink:#1A1208; --accent-soft:#3B2618;
-  --wood:#C79560; --wood-soft:#2C251C;
-  --A:#8DBE80; --B:#82AAD8; --C:#E68D6C; --onacc:#13161E;
-  --x-pine:#56A984; --x-berry:#FF7A80; --x-soft:#1B2B24;
-  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--f-body);padding-bottom:100px}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--navy)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .num{font-variant-numeric:tabular-nums}
 
-/* 頁首：深藍＋一排書背＋木頭層板 */
-.hero{background:var(--navy);color:var(--navy-ink);position:relative}
-.hero .wrap{position:relative;padding-block:22px 16px}
-.brandtag{display:inline-block;border:1.5px solid rgba(251,246,236,.55);font-weight:700;font-size:12.5px;padding:1px 12px;border-radius:4px;letter-spacing:.06em}
-.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,7.5vw,42px);line-height:1.15;margin:10px 0 0;letter-spacing:.08em;text-wrap:balance}
-.hero p{margin:6px 0 0;opacity:.9;font-size:14px}
-.hero p b{font-size:17px;color:#F6C08F}
-.shelfband{height:30px;position:relative;background:var(--navy)}
-.shelfband::before{content:"";position:absolute;left:0;right:0;bottom:8px;height:22px;
-  background:
-    repeating-linear-gradient(90deg,transparent 0 3px,rgba(0,0,0,.18) 3px 4px,transparent 4px 7px),
-    repeating-linear-gradient(90deg,#C95A22 0 13px,#E8C27A 13px 21px,#5F8A55 21px 33px,#F3E9D6 33px 39px,#3F6E9E 39px 54px,#B85A3A 54px 61px,#8C6BA8 61px 70px,#E8C27A 70px 79px,#2F4A6E 79px 90px,#D99A5B 90px 98px);
-  -webkit-mask-image:repeating-linear-gradient(90deg,#000 0 96px,transparent 96px 104px);mask-image:repeating-linear-gradient(90deg,#000 0 96px,transparent 96px 104px)}
-.shelfband::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:var(--wood);box-shadow:inset 0 2px 0 rgba(255,255,255,.18)}
+/* 紙紋：整頁蓋一層很淡的雜訊 */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:70;opacity:.16;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .4 0 0 0 0 .3 0 0 0 -.9 .62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
 
-/* 分頁：書籤式按鈕 */
+/* 頁首：左文字＋右水彩插畫（手機：插畫在最上面），下面一條鉛筆地平線 */
+.hero{position:relative;padding-top:24px}
+.hero-in{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}
+.brandtag{font-family:var(--f-hand);font-size:24px;color:var(--accent);line-height:1.2}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,6.4vw,44px);line-height:1.22;margin:6px 0 0;letter-spacing:.08em;text-wrap:balance}
+.uline{display:block;width:min(340px,80%);height:16px;margin:2px 0 0}
+.hero p{margin:10px 0 0;color:var(--muted);font-size:14.5px;letter-spacing:.05em;line-height:1.75}
+.hero p b{font-size:16px;color:var(--accent)}
+/* 插畫的紙色和頁面一樣：multiply＋邊緣淡出 */
+.hero-illu{height:320px;width:auto;display:block;margin:-14px -10px -20px 0;mix-blend-mode:multiply;
+  -webkit-mask-image:radial-gradient(ellipse 60% 58% at 54% 50%,#000 60%,transparent 100%);
+          mask-image:radial-gradient(ellipse 60% 58% at 54% 50%,#000 60%,transparent 100%)}
+.horizon{display:block;width:100%;height:24px;margin-top:4px}
+@media (max-width:640px){
+  .hero{padding-top:0}
+  .hero-in{display:flex;flex-direction:column-reverse;align-items:stretch;gap:0}
+  .hero-illu{height:250px;width:calc(100% + 32px);margin:0 -16px -8px;object-fit:cover;object-position:50% 24%;
+    -webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
+}
+/* 試算表的標題還沒讀到前先藏起來（保留高度），避免先閃一下預設文字 */
+.hero .hdr-wait{visibility:hidden}
+/* 分頁：鉛筆框，選中的那個有一抹水彩 */
 .tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line)}
-.tabs .wrap{display:flex;gap:8px;padding-block:8px}
-.tab{flex:1;border:1.5px solid var(--line);background:var(--card);padding:9px 4px;font-weight:700;color:var(--muted);border-radius:8px}
-.tab[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:var(--navy-ink)}
+.tabs .wrap{display:flex;gap:10px;padding-block:8px}
+.tab{flex:1;border:0;background:transparent;padding:9px 4px;font-weight:700;color:var(--muted);border-radius:3px;position:relative;letter-spacing:.06em}
+.tab::before{content:"";position:absolute;inset:0;border:1.4px solid var(--pencil);border-radius:3px;filter:url(#rough);opacity:.7}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--ink)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:calc(50% - 44px);width:88px;bottom:7px;height:7px;background:var(--accent);opacity:.3;border-radius:6px;filter:url(#rough)}
 
 .banner{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
 .banner.demo{background:var(--wood-soft);color:var(--ink)}
@@ -197,8 +198,6 @@ section.hot::before{content:"";position:absolute;right:16px;top:-1px;width:14px;
 .btn.navy{background:var(--navy);color:var(--navy-ink)}
 .btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
 .btn.block{width:100%}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.ghost{color:var(--ink);border-color:var(--ink)}}
-:root[data-theme="dark"] .btn.ghost{color:var(--ink);border-color:var(--ink)}
 
 /* 抽屜式視窗 */
 .overlay{position:fixed;inset:0;z-index:40;background:rgba(20,18,12,.55);display:flex;align-items:flex-end;justify-content:center}
@@ -249,8 +248,6 @@ section.hot::before{content:"";position:absolute;right:16px;top:-1px;width:14px;
 .oids{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .oid{font-size:15px;background:var(--navy-soft);color:var(--navy);padding:4px 14px;border-radius:6px;font-weight:700;letter-spacing:.05em}
 .oid.xm{background:var(--x-soft);color:var(--x-pine)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .oid{color:var(--ink)}}
-:root[data-theme="dark"] .oid{color:var(--ink)}
 .summary{white-space:pre-wrap;text-align:left;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;width:100%;margin:0;font-family:var(--f-body);user-select:all}
 
 /* 詳細 */
@@ -274,8 +271,6 @@ section.hot::before{content:"";position:absolute;right:16px;top:-1px;width:14px;
 .pill.paid{background:var(--accent-soft);color:var(--accent)}
 .pill.k{background:var(--wood-soft);color:var(--wood)}
 .pill.kx{background:var(--x-soft);color:var(--x-pine)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.ok{color:var(--ink)}}
-:root[data-theme="dark"] .pill.ok{color:var(--ink)}
 .oacts{display:flex;gap:8px;flex-wrap:wrap}
 .oacts .btn{padding:9px 16px;font-size:14px}
 .empty{color:var(--muted);text-align:center;padding:30px 10px}
@@ -285,17 +280,88 @@ section.hot::before{content:"";position:absolute;right:16px;top:-1px;width:14px;
 footer{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 0 8px}
 footer a{color:var(--accent);font-weight:700}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+
+/* ===== 手帳風覆寫：放在最後，蓋過上面的舊樣式 ===== */
+.search{border:0;border-bottom:1.6px solid var(--pencil);border-radius:0}
+.search:focus-within{border-color:var(--accent)}
+/* 年齡分區：手帳索引標籤 */
+.age{border:0;border-left:6px solid var(--c,var(--pencil));border-radius:2px 12px 12px 2px;box-shadow:0 1px 2px rgba(80,60,40,.1);letter-spacing:.04em}
+.age.on{background:color-mix(in srgb,var(--c,var(--pencil)) 18%,var(--card));color:var(--ink)}
+.age.on small{color:var(--muted);opacity:1}
+/* 聖誕專區：夾進手帳的小卡 */
+.xpromo{background:var(--card);border:0;border-radius:2px;padding:12px 14px;margin-top:16px;position:relative;box-shadow:0 2px 6px rgba(80,60,40,.08)}
+.xpromo::before{content:"";position:absolute;width:64px;height:18px;top:-8px;left:22px;background:rgba(79,122,85,.4);transform:rotate(-3deg)}
+.xpromo b{font-family:var(--f-display);letter-spacing:.04em}
+.xpromo .go{font-family:var(--f-hand);font-size:20px;font-weight:700}
+.xpromo.back{border:0}
+/* 熱購主題：郵票 */
+section.hot{background:transparent;border:0;padding:0;margin-top:20px}
+section.hot::before{display:none}
+.hot-h{font-size:18px;letter-spacing:.08em;display:flex;align-items:baseline;gap:10px}
+.hot-h::after{content:"our picks";font-family:var(--f-hand);font-weight:500;font-size:21px;color:var(--accent)}
+.hotchips{display:flex;flex-wrap:wrap;gap:8px}
+.hotchip{border:0;background:var(--card);border-radius:0;padding:7px 16px;font-weight:500;letter-spacing:.06em;
+  outline:1px dashed var(--line);outline-offset:-5px;
+  -webkit-mask:radial-gradient(circle 3px at 3px 50%,#0000 98%,#000) -3px 0/100% 9px repeat-y,linear-gradient(#000 0 0);
+  -webkit-mask-composite:source-in;mask-composite:intersect}
+.hotchip.on{background:var(--accent);color:#fff;outline-color:rgba(255,255,255,.5)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+/* 分段標題 */
+.sec{border-bottom:1px solid rgba(140,122,105,.45);margin-top:32px}
+.sec .lbl{border-radius:2px}
+.sec h2{letter-spacing:.1em}
+.sec.xm{border-bottom-color:rgba(79,122,85,.5)}
+/* 書卡：拍立得＋紙膠帶 */
+.grid{gap:24px 16px;margin-top:18px}
+.book{border:0;border-radius:2px;padding:9px 9px 0;overflow:visible;position:relative}
+.book::before{content:"";position:absolute;z-index:2;width:58px;height:17px;top:-8px;left:50%;margin-left:-29px;background:var(--tape);transform:rotate(-3deg);pointer-events:none}
+.book:nth-child(2n)::before{background:rgba(217,164,65,.35);transform:rotate(4deg)}
+.book.xm::before{background:rgba(79,122,85,.35)}
+.book:nth-child(3n+1){transform:rotate(-.6deg)}
+.book:nth-child(3n+2){transform:rotate(.5deg)}
+.cover{background:#F5EBDD;border-bottom:0;border-radius:1px}
+.book.xm .cover{background:var(--x-soft)}
+.code{border-width:1px;font-size:12px;border-radius:2px}
+.flag{border-radius:2px}
+.info{padding:10px 3px 12px}
+.title{font-family:var(--f-display);letter-spacing:.03em}
+.price{font-family:var(--f-hand);font-size:26px;line-height:1}
+.price small{font-size:18px}
+.stepper{border:1.4px solid var(--line);border-radius:22px}
+.stepper button{border-radius:50%;background:var(--navy-soft);color:var(--ink)}
+.stepper.on{border-color:var(--accent);background:var(--accent-soft)}
+.stepper.on button{background:var(--accent);color:#fff}
+/* 購物車列：淺色紙條 */
+.cartbar{background:var(--card);color:var(--ink);border-top:1.4px solid var(--pencil);box-shadow:0 -4px 16px rgba(80,60,40,.08)}
+.cartsum b{color:var(--accent);font-family:var(--f-hand);font-size:24px}
+.cartsum .sub{color:var(--muted);opacity:1}
+.cartsum .hint{color:var(--muted);opacity:1}
+.btn{border-radius:3px;letter-spacing:.06em}
 </style>
 </head>
 <body>
 
+<!-- 鉛筆線抖動效果（分頁框、底線、地平線共用） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
+</svg>
+
 <header class="hero">
-  <div class="wrap">
-    <span class="brandtag">SYY(泱泱) 學習實驗室</span>
-    <h1 id="siteTitle">SYY 現貨書櫃</h1>
-    <p id="lede">手邊現貨・確認後就出貨</p>
+  <div class="wrap hero-in">
+    <div>
+      <div class="brandtag">SYY bookshelf</div>
+      <h1 id="siteTitle" class="hdr-wait">SYY 精選親子書櫃</h1>
+      <svg class="uline" viewBox="0 0 340 16" preserveAspectRatio="none" aria-hidden="true"><path d="M3 10 C 80 4, 160 14, 240 8 S 320 7, 337 9" fill="none" stroke="#E9B9B3" stroke-width="9" stroke-linecap="round" opacity=".8" filter="url(#rough)"/></svg>
+      <p id="lede" class="hdr-wait">&nbsp;</p>
+    </div>
+    <img class="hero-illu" src="illu-family.jpg" alt="媽媽和孩子坐在地上一起讀繪本的水彩插畫" width="760" height="1013">
   </div>
-  <div class="shelfband" aria-hidden="true"></div>
+  <div class="wrap" aria-hidden="true">
+    <svg class="horizon" viewBox="0 0 1000 24" preserveAspectRatio="none">
+      <path d="M0 13 C 160 7, 330 17, 500 11 S 830 8, 1000 13" fill="none" stroke="#8C7A69" stroke-width="1.3" opacity=".7" filter="url(#rough)"/>
+      <path d="M40 17 C 200 12, 380 21, 560 16 S 860 13, 980 17" fill="none" stroke="#4F7A55" stroke-width="9" stroke-linecap="round" opacity=".14" filter="url(#rough)"/>
+    </svg>
+  </div>
 </header>
 
 <nav class="tabs" aria-label="頁面">
@@ -1082,11 +1148,22 @@ async function reloadCatalog() {
     if (q) S.cart[id] = q; else delete S.cart[id]; });
   document.title = S.settings.title; $('#siteTitle').textContent = S.settings.title;
   renderAll();
+  // 記住這次的標題，下次打開直接先顯示，不用等試算表
+  store.set(HDR_KEY, { title: S.settings.title, lede: $('#lede').innerHTML });
+  showHeader();
   return true;
 }
+const HDR_KEY = 'stock-header';
+function showHeader() { document.querySelectorAll('.hdr-wait').forEach(el => el.classList.remove('hdr-wait')); }
 (async () => {
   S.cart = store.get(CART_KEY, {});
-  await reloadCatalog();
+  const h = store.get(HDR_KEY, null);
+  if (h && h.title) {
+    document.title = h.title; $('#siteTitle').textContent = h.title; $('#lede').innerHTML = h.lede || '';
+    showHeader();
+  }
+  const ok = await reloadCatalog();
+  if (!ok) { if (!h) $('#lede').textContent = TEXT_DEFAULT.lede1; showHeader(); }
 })();
 </script>
 </body>
