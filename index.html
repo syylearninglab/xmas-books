@@ -234,12 +234,13 @@ footer{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 0 8px}
           <div class="field"><label for="lkLine">LINE 名稱</label><input id="lkLine" autocomplete="off" autocapitalize="off" placeholder="LINE 上顯示的名稱"></div>
         </div>
         <button class="btn pine block" id="lkBtn" type="submit">查詢訂單</button>
+        <div class="hint" style="text-align:center">聖誕團購訂單（XM 開頭）和現貨訂單（ST 開頭）都會一起列出來。</div>
       </div>
       <div id="lookupResult"></div>
     </form>
   </section>
 
-  <footer>有任何問題請在 LINE 群組私訊團主</footer>
+  <footer>有任何問題請私訊 SYY 官方 LINE：<a href="https://line.me/R/ti/p/@970xwzkg" target="_blank" rel="noopener">@970xwzkg</a></footer>
 </main>
 
 <div class="cartbar" id="cartbar">
@@ -300,14 +301,15 @@ const store = {
 const DEMO_MODE = !CONFIG.API_URL;
 
 /* ======================= API ======================= */
-async function api(action, payload = {}) {
-  if (DEMO_MODE) return demoApi(action, payload);
+// type：省略＝聖誕團購；'stock'＝現貨書櫃（查詢訂單時一起查現貨單）
+async function api(action, payload = {}, type) {
+  if (DEMO_MODE) return type === 'stock' ? { ok: true, orders: [] } : demoApi(action, payload);
   try {
     let res;
     if (action === 'catalog') res = await fetch(CONFIG.API_URL + '?action=catalog');
     // 用 text/plain 送 JSON，避免 Apps Script 不支援的 CORS 預檢
     else res = await fetch(CONFIG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(Object.assign({ action }, payload)) });
+      body: JSON.stringify(Object.assign({ action }, type ? { type } : {}, payload)) });
     return await res.json();
   } catch (e) {
     return { ok: false, error: '網路連線不穩，請稍後再試一次' };
@@ -614,6 +616,9 @@ async function submitOrder(form) {
         <div class="hint" style="text-align:center">原訂單付款後，就可以另外下「追加單」</div>`);
       $('#mergeBtn').onclick = () => mergeIntoOrder(payload.order.phone, o.lineId, r.dupId, $('#mergeBtn'));
     }
+    // 原訂單裡有現貨書：要到現貨書櫃加（這裡沒有現貨書，改了會不見）
+    if (r.code === 'GO_SHOP')
+      $('#formErr').insertAdjacentHTML('beforeend', `<a class="btn pine block" href="stock.html" style="margin-top:8px;text-align:center;text-decoration:none">📚 到現貨書櫃加書</a>`);
     if (r.code === 'STOCK') reloadCatalog();
     return;
   }
@@ -637,7 +642,7 @@ function showDone(o, wasEdit) {
     <p class="big">${wasEdit ? '訂單已更新 ✏️' : '謝謝你的訂購 🎄'}</p>
     <span class="oid">訂單編號 ${esc(o.id)}</span>
     ${o.addonOf ? `<p class="hint" style="margin:6px 0 0">📌 這是${esc(o.addonOf)}，請另外付這張的款項</p>` : ''}
-    <p class="hint" style="margin:6px 0 0">把下面的摘要複製貼回 LINE 群，團主就能快速確認</p>
+    <p class="hint" style="margin:6px 0 0">把下面的摘要複製，貼到 SYY 官方 LINE：<a href="https://line.me/R/ti/p/@970xwzkg" target="_blank" rel="noopener">@970xwzkg</a>，團主就能快速確認</p>
     <pre class="summary" id="sumText">${esc(text)}</pre>
     <button class="btn pine block" id="copyBtn">📋 複製訂單摘要</button>
     <button class="btn ghost block" id="doneBtn">繼續逛逛</button>
@@ -661,13 +666,17 @@ $('#lookupForm').addEventListener('submit', async e => {
 async function doLookup() {
   const out = $('#lookupResult'), btn = $('#lkBtn');
   btn.disabled = true; btn.textContent = '查詢中…';
-  const r = await api('lookup', S.lookup);
+  // 和現貨書櫃一樣：聖誕單、現貨單一起查（現貨單在這裡只能看，修改請到現貨書櫃）
+  const [r, sr] = await Promise.all([api('lookup', S.lookup), api('lookup', S.lookup, 'stock')]);
   btn.disabled = false; btn.textContent = '查詢訂單';
   if (!r.ok) { out.innerHTML = `<div class="formerr">${esc(r.error)}</div>`; return; }
-  if (!r.orders.length) { out.innerHTML = '<p class="empty">找不到訂單。請確認電話和 LINE 名稱 是否和下單時一樣。</p>'; return; }
-  S.lookupOrders = r.orders;
-  out.innerHTML = r.orders.map(o => {
-    const active = o.status === '有效', canEdit = active && !o.paid && S.settings.isOpen;
+  const stockOrders = sr && sr.ok ? (sr.orders || []).map(o => Object.assign({ kind: 'stock' }, o)) : [];
+  const orders = r.orders.concat(stockOrders).sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
+  if (!orders.length) { out.innerHTML = '<p class="empty">找不到訂單。請確認電話和 LINE 名稱 是否和下單時一樣。</p>'; return; }
+  S.lookupOrders = orders;
+  out.innerHTML = orders.map(o => {
+    if (o.kind === 'stock' || o.kind === 'mix') return stockOrderHtml(o);
+    const active = o.status === '有效', canEdit = active && !o.paid && !o.locked && S.settings.isOpen;
     return `<div class="order">
       <div class="ohead"><b>${esc(o.id)}</b>
         <span class="pill ${active?'ok':'no'}">${esc(o.status)}</span>
@@ -675,10 +684,22 @@ async function doLookup() {
       <div class="lines">${o.items.map(i => `<div class="ln"><span class="t">${esc(i.title)}</span><span class="q num">×${i.qty}</span><span class="a num">${money(i.price*i.qty)}</span></div>`).join('')}</div>
       <div class="tot"><div class="ln big"><span class="t">應付金額</span><span class="a num">${money(o.total)}</span></div></div>
       ${canEdit ? `<div class="oacts"><button class="btn pine" data-edit="${esc(o.id)}">修改／加書</button><button class="btn ghost" data-cancel="${esc(o.id)}">取消訂單</button></div>`
-        : active && o.paid ? `<div class="hint">已付款的訂單不能修改。${S.settings.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單。' : '如需調整請私訊團主。'}</div>` : ''}
+        : active && o.paid ? `<div class="hint">已付款的訂單不能修改。${S.settings.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單。' : '如需調整請私訊團主。'}</div>`
+        : active && o.locked ? `<div class="hint">🔒 ${esc(o.lockReason)}，不能自己修改或取消。${S.settings.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單；' : ''}要減書或取消請私訊團主。</div>` : ''}
       ${active ? `<button class="btn ghost" data-copy="${esc(o.id)}" style="justify-self:start;padding:8px 14px;font-size:13.5px">📋 複製摘要</button>` : ''}
     </div>`;
   }).join('');
+}
+function stockOrderHtml(o) {
+  const active = o.status === '有效';
+  return `<div class="order">
+    <div class="ohead"><b>${esc(o.id)}</b><span class="pill no">${o.kind === 'mix' ? '📚🎄 現貨＋聖誕' : '📚 現貨'}</span>
+      <span class="pill ${active?'ok':'no'}">${esc(o.status)}</span>
+      ${o.paid?'<span class="pill paid">已付款</span>':''}${o.picked?'<span class="pill paid">已取書</span>':''}${o.addonOf?'<span class="pill no">追加單</span>':''}</div>
+    <div class="lines">${o.items.map(i => `<div class="ln"><span class="t">${esc(i.title)}</span><span class="q num">×${i.qty}</span><span class="a num">${money(i.price*i.qty)}</span></div>`).join('')}</div>
+    <div class="tot"><div class="ln big"><span class="t">應付金額</span><span class="a num">${money(o.total)}</span></div></div>
+    ${active ? `<div class="hint">${o.kind === 'mix' ? '這張訂單裡有現貨書' : '這是現貨書櫃的訂單'}，要修改、加書、取消或複製摘要請到 <a href="stock.html">📚 現貨書櫃</a> 的「查詢訂單」。</div>` : ''}
+  </div>`;
 }
 $('#lookupResult').addEventListener('click', async e => {
   const ed = e.target.closest('[data-edit]'), cc = e.target.closest('[data-cancel]'), cp = e.target.closest('[data-copy]');
@@ -705,7 +726,7 @@ async function mergeIntoOrder(phone, lineId, orderId, btn) {
   btn.disabled = true; btn.textContent = '載入原訂單中…';
   const extra = Object.assign({}, S.cart);
   const r = await api('lookup', { phone, lineId });
-  const o = r.ok && r.orders.find(x => x.id === orderId && x.status === '有效' && !x.paid);
+  const o = r.ok && r.orders.find(x => x.id === orderId && x.status === '有效' && !x.paid && !x.locked);
   if (!o) {
     btn.disabled = false; btn.textContent = '➕ 把這次選的書加到原訂單';
     $('#formErr').innerHTML = `<div class="formerr">找不到原訂單 ${esc(orderId || '')}。如果 LINE 名稱 和上次填的不一樣，請到「查詢訂單」用上次的名稱查詢後按「修改／加書」。</div>`;

@@ -363,13 +363,15 @@ const AGES = [
   { k:'B', label:'2–4 歲', sub:'生活習慣・情緒' },
   { k:'C', label:'3–6 歲', sub:'故事・得獎經典' },
 ];
+// mix＝現貨＋聖誕合併單（一起結帳就是一張單）
 const KIND = {
-  stock: { name:'現貨', label:'📚 現貨', note:'確認後就出貨', prefix:'ST' },
-  xmas:  { name:'聖誕團購', label:'🎄 聖誕團購', note:'預購，到貨後出貨', prefix:'XM' },
+  stock: { name:'現貨', label:'📚 現貨', prefix:'ST' },
+  xmas:  { name:'聖誕團購', label:'🎄 聖誕團購', prefix:'XM' },
+  mix:   { name:'現貨＋聖誕', label:'📚🎄 現貨＋聖誕', prefix:'ST' },
 };
 // 聖誕書的標籤（和聖誕團購頁相同規則）
 const TAG_ALIAS = { '去年熱賣': 'SYY社群熱購', '團友熱購': 'SYY社群熱購', '社群熱購': 'SYY社群熱購', '熱賣': 'SYY社群熱購' };
-const TAG_ICON = { 'SYY社群熱購':'🔥', '新書':'✨', '交換禮物':'🎁' };
+const TAG_ICON = { '聖誕團購':'🎄', 'SYY社群熱購':'🔥', '新書':'✨', '交換禮物':'🎁' };
 // 兩邊書單出版社寫法不同時，篩選合併成同一個
 const PUB_ALIAS = { '禾流':'禾流文創', '水滴文化':'水滴' };
 
@@ -456,7 +458,7 @@ const S = {
   editing: null,       // {type, orderId, phone, lineId, prev:{書號:數量}, form}
   q: '', age: 'all', tags: new Set(), pub: '', panel: '', inStock: false,
   lookup: null,        // {phone, lineId}
-  done: [],            // 這次結帳已送出成功的訂單（分兩張單時用）
+  done: [],            // 這次結帳送出成功的訂單（顯示完成畫面用）
 };
 const $ = s => document.querySelector(s);
 const money = n => '$' + Number(n || 0).toLocaleString('en-US');
@@ -470,64 +472,65 @@ const CART_KEY = 'stock-cart';
 const PROFILE_KEY = 'xmas-profile';   // 和聖誕團購共用「記住上次填的資料」
 
 /* ======================= API ======================= */
-// type：'stock'＝現貨（預設）、'xmas'＝聖誕團購
+// 讀書單時 type：'stock'＝現貨書單、'xmas'＝聖誕書單
+// 下單／查詢／取消一律送 type:'shop' → 後台知道是現貨書櫃，現貨書和聖誕書可以放在同一張單
 async function api(action, payload = {}, type = 'stock') {
   if (DEMO_MODE) return demoApi(action, payload, type);
   try {
     let res;
     if (action === 'catalog') res = await fetch(CONFIG.API_URL + '?action=' + (type === 'xmas' ? 'catalog' : 'stockCatalog'));
-    // 用 text/plain 送 JSON，避免 Apps Script 不支援的 CORS 預檢；type 讓後台分辨現貨單／聖誕單
+    // 用 text/plain 送 JSON，避免 Apps Script 不支援的 CORS 預檢
     else res = await fetch(CONFIG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(Object.assign({ action, type }, payload)) });
+      body: JSON.stringify(Object.assign({ action, type: 'shop' }, payload)) });
     return await res.json();
   } catch (e) {
     return { ok: false, error: '網路連線不穩，請稍後再試一次' };
   }
 }
 
-/* 預覽模式：在瀏覽器裡模擬後台（現貨與聖誕各自計算，不模擬共用庫存） */
+/* 預覽模式：在瀏覽器裡模擬後台（現貨與聖誕可以同一張單；不模擬共用庫存） */
 function demoApi(action, p, type) {
-  const orders = store.get('stock-demo-orders2', []);
-  const save = () => store.set('stock-demo-orders2', orders);
+  const orders = store.get('stock-demo-orders3', []);
+  const save = () => store.set('stock-demo-orders3', orders);
   const np = s => String(s||'').replace(/\D/g,''), nl = s => String(s||'').replace(/\s+/g,'').toLowerCase();
   const sold = ex => { const m = {}; orders.filter(o => o.status==='有效' && o.id!==ex).forEach(o => o.items.forEach(i => m[i.id]=(m[i.id]||0)+i.qty)); return m; };
-  const base = b => type === 'xmas' ? b.left : b.stock;
+  const isXid = id => !/^S/i.test(id);
+  const base = b => isXid(b.id) ? b.left : b.stock;
   const left = (b, sd) => base(b) == null ? null : Math.max(0, base(b) - (sd[b.id]||0));
-  const list = type === 'xmas' ? DEMO.xbooks : DEMO.books;
-  const st = type === 'xmas' ? DEMO.xsettings : DEMO.settings;
   return new Promise(resolve => setTimeout(() => {
     if (action === 'catalog') {
       const sd = sold();
+      const list = type === 'xmas' ? DEMO.xbooks : DEMO.books;
       const books = list.map(b => Object.assign({}, b, { remaining: left(b, sd) }));
-      resolve(type === 'xmas' ? { ok:true, settings: st, books }
-        : { ok:true, settings: st, featured: DEMO.featured, books });
+      resolve(type === 'xmas' ? { ok:true, settings: DEMO.xsettings, books }
+        : { ok:true, settings: DEMO.settings, featured: DEMO.featured, books });
     } else if (action === 'submit') {
       const o = p.order, ed = p.edit;
-      const mineType = orders.filter(x => x.type === type);
-      let existing = ed ? mineType.find(x => x.id === ed.orderId) : null;
+      let existing = ed ? orders.find(x => x.id === ed.orderId) : null;
       if (ed && !existing) return resolve({ ok:false, error:'找不到這張訂單' });
       let addonOf = existing ? (existing.addonOf || '') : '';
-      if (!ed) { const mine = mineType.filter(x => x.status==='有效' && np(x.phone)===np(o.phone)), dup = mine.find(x => !x.paid);
-        if (dup) return resolve({ ok:false, code:'DUPLICATE', dupId: dup.id, error:'這支電話已經有一張還沒付款的' + KIND[type].name + '訂單（'+dup.id+'），可以把這次選的書直接加進去' });
+      if (!ed) { const mine = orders.filter(x => x.status==='有效' && np(x.phone)===np(o.phone)), dup = mine.find(x => !x.paid);
+        if (dup) return resolve({ ok:false, code:'DUPLICATE', dupId: dup.id, error:'這支電話已經有一張還沒付款的訂單（'+dup.id+'），可以把這次選的書直接加進去' });
         if (mine.length) addonOf = '追加單（原單 ' + mine.map(x => x.id).join('、') + '）'; }
       const sd = sold(existing && existing.id);
       const lines = [];
-      for (const it of o.items) { const b = list.find(x => x.id===it.id);
+      for (const it of o.items) { const b = DEMO.books.concat(DEMO.xbooks).find(x => x.id===it.id);
         if (!b || !b.price) return resolve({ ok:false, code:'STOCK', error:'有書籍已下架或還沒定價，請重新整理頁面' });
         const l = left(b, sd);
         if (l != null && it.qty > l) return resolve({ ok:false, code:'STOCK', error: l ? '「'+b.title+'」只剩 '+l+' 本，請調整數量' : '「'+b.title+'」已售完，請洽SYY LINE官方@970xwzkg' });
-        lines.push({ id:b.id, title:b.title, price:b.price, list:b.list || 0, qty:it.qty }); }
-      const t = totals(lines, type === 'xmas' ? st : null);
-      const n = mineType.length + 1;
-      const id = existing ? existing.id : KIND[type].prefix + String(n).padStart(4,'0');
-      const rec = Object.assign({ id, type, createdAt: existing ? existing.createdAt : new Date().toISOString(), status:'有效', paid:false, picked:false },
+        lines.push({ id:b.id, kind: isXid(b.id) ? 'xmas' : 'stock', title:b.title, price:b.price, list:b.list || 0, qty:it.qty }); }
+      const t = totals(lines);
+      const s = lines.some(l => l.kind === 'stock'), x = lines.some(l => l.kind === 'xmas');
+      const kind = s && x ? 'mix' : s ? 'stock' : 'xmas';
+      const id = existing ? existing.id : KIND[kind].prefix + String(orders.length + 1).padStart(4,'0');
+      const rec = Object.assign({ id, kind, createdAt: existing ? existing.createdAt : new Date().toISOString(), status:'有效', paid:false, picked:false },
         o, { addonOf, items: lines, qty:t.qty, listSum:t.listSum, subtotal:t.subtotal, discount:t.discount, total:t.total });
       if (existing) orders[orders.indexOf(existing)] = rec; else orders.push(rec);
       save(); resolve({ ok:true, order: rec });
     } else if (action === 'lookup') {
-      resolve({ ok:true, orders: orders.filter(o => o.type===type && np(o.phone)===np(p.phone) && nl(o.lineId)===nl(p.lineId)).reverse() });
+      resolve({ ok:true, orders: orders.filter(o => np(o.phone)===np(p.phone) && nl(o.lineId)===nl(p.lineId)).reverse() });
     } else if (action === 'cancel') {
-      const o = orders.find(x => x.id===p.orderId && x.type===type); if (o) o.status='已取消'; save(); resolve({ ok:true });
+      const o = orders.find(x => x.id===p.orderId); if (o) o.status='已取消'; save(); resolve({ ok:true });
     }
   }, 350));
 }
@@ -546,6 +549,12 @@ function totals(lines, xs) {
   return { qty, listSum, subtotal, discount, total: subtotal - discount };
 }
 const totalsOf = (kind, lines) => totals(lines, kind === 'xmas' ? S.xs : null);
+// 一整張單（可能現貨＋聖誕都有）的合計：滿額優惠只算聖誕書的部分
+function totalsAll(g) {
+  const a = totalsOf('xmas', g.xmas), b = totalsOf('stock', g.stock);
+  return { qty: a.qty + b.qty, listSum: a.listSum + b.listSum, subtotal: a.subtotal + b.subtotal,
+    discount: a.discount + b.discount, total: a.total + b.total };
+}
 function cartLines() {
   return Object.entries(S.cart).filter(([,q]) => q > 0).map(([id,q]) => { const b = S.byId[id];
     return b && b.price && { id, kind:b.kind, title:b.title, price:b.price, list:b.list || 0, qty:q }; }).filter(Boolean);
@@ -559,15 +568,24 @@ function maxFor(b) {
   if (!b || !b.price) return 0;
   const per = (setOf(b.kind) && setOf(b.kind).perMax) || 10;
   if (b.remaining == null) return per;
-  const prev = (S.editing && S.editing.type === b.kind && S.editing.prev[b.id]) || 0;
+  const prev = (S.editing && S.editing.prev[b.id]) || 0;
   return Math.min(per, b.remaining + prev);
 }
-// 這張書卡實際要買的書：現貨沒定價、但有對應的聖誕書 → 用聖誕團購價買那本
-function targetOf(b) {
-  if (b.price) return b;
-  if (!isX(b) && b.xmasId && S.byId[b.xmasId] && S.byId[b.xmasId].price) return S.byId[b.xmasId];
-  return null;
+// 對應的聖誕書（現貨書單 N 欄「聖誕書號」）
+function twinOf(b) {
+  if (isX(b) || !b.xmasId) return null;
+  const x = S.byId[b.xmasId];
+  return x && isX(x) && x.price ? x : null;
 }
+// 這張書卡實際要買的書：聖誕書以聖誕書櫃為主 → 聖誕團購期間，對應的書一律用聖誕書的書名、團購價、聖誕團購單下單
+// （聖誕團購截止後，現貨有定價才改回現貨價賣）
+function targetOf(b) {
+  const x = twinOf(b);
+  if (x && (!b.price || (S.xs && S.xs.isOpen))) return x;
+  return b.price ? b : null;
+}
+// 書卡上顯示的書名：用聖誕書賣的時候，書名跟聖誕書櫃一樣
+function titleOf(b) { const t = targetOf(b); return t && t !== b && isX(t) ? t.title : b.title; }
 const ageKey = b => { if (isX(b)) return 'X'; const a = AGES.find(x => x.label.replace(/\s/g,'') === String(b.age).replace(/\s/g,'').replace('-', '–')); return a ? a.k : String(b.id).charAt(1).toUpperCase(); };
 const ageColor = k => ({ A:'var(--A)', B:'var(--B)', C:'var(--C)', X:'var(--x-pine)' })[k] || 'var(--navy)';
 const pubName = b => (!b.publisher || b.publisher === '—' || b.publisher === '待確認') ? '其他' : (PUB_ALIAS[b.publisher] || b.publisher);
@@ -595,7 +613,8 @@ function priceHtml(b, t) {
   return p + (isX(b) && b.list > b.price ? `<span class="list num">$${b.list}</span>` : '');
 }
 function badgesHtml(b) {
-  const ts = isX(b) ? b.xtags : [];
+  // 聖誕區的每本書都有「🎄 聖誕團購」標籤，排在最前面
+  const ts = isX(b) ? ['聖誕團購', ...b.xtags.filter(t => t !== '聖誕團購')] : [];
   return ts.length ? `<div class="badges">${ts.map(t => `<span class="badge ${t==='SYY社群熱購'?'hot':''}">${TAG_ICON[t] || '🏷️'} ${esc(t)}</span>`).join('')}</div>` : '';
 }
 const SOLD_HTML = `<div class="soldbtn">已售完</div><a class="soldnote" href="${LINE_OA}" target="_blank" rel="noopener">請洽SYY LINE官方@970xwzkg</a>`;
@@ -612,7 +631,7 @@ function visible() {
     if (S.inStock && isOut(targetOf(b) || b)) return false;
     if (S.tags.size && ![...S.tags].every(t => (b.tags || []).includes(t))) return false;
     if (S.pub && pubName(b) !== S.pub) return false;
-    if (q && !(b.id + ' ' + b.title + ' ' + b.publisher).toLowerCase().includes(q)) return false;
+    if (q && !(b.id + ' ' + b.title + ' ' + titleOf(b) + ' ' + b.publisher).toLowerCase().includes(q)) return false;
     return true;
   });
 }
@@ -655,22 +674,22 @@ function fmtDeadline(iso) {
 }
 
 function cardHtml(b) {
-  const t = targetOf(b);
+  const t = targetOf(b), title = titleOf(b);
   const q = t ? (S.cart[t.id] || 0) : 0, max = t ? maxFor(t) : 0;
   const open = t && setOf(t.kind) && setOf(t.kind).isOpen;
   const control = !t ? ''
     : max <= 0 && q === 0 ? SOLD_HTML
     : !open ? `<div class="soldbtn">${isX(t) ? '聖誕團購已截止' : '暫停下單中'}</div>`
     : `<div class="stepper ${q?'on':''}" data-id="${esc(t.id)}">
-        <button data-d="-1" aria-label="減少 ${esc(b.title)}" ${q<=0?'disabled':''}>−</button>
+        <button data-d="-1" aria-label="減少 ${esc(title)}" ${q<=0?'disabled':''}>−</button>
         <span class="q num" aria-live="polite">${q}</span>
-        <button data-d="1" aria-label="增加 ${esc(b.title)}" ${q>=max?'disabled':''}>＋</button>
+        <button data-d="1" aria-label="增加 ${esc(title)}" ${q>=max?'disabled':''}>＋</button>
       </div>`;
   return `<article class="book ${isX(b)?'xm':''} ${isOut(t || b)?'soldout':''}" style="--c:${ageColor(ageKey(b))}">
-    <button class="cover" data-detail="${esc(b.id)}" aria-label="查看 ${esc(b.id + ' ' + b.title)}">${coverHtml(b)}<span class="code">${esc(b.id)}</span>${flagHtml(b, t)}</button>
+    <button class="cover" data-detail="${esc(b.id)}" aria-label="查看 ${esc(b.id + ' ' + title)}">${coverHtml(b)}<span class="code">${esc(b.id)}</span>${flagHtml(b, t)}</button>
     <div class="info">
       ${pubName(b) !== '其他' ? `<div class="pub">${esc(b.publisher)}</div>` : ''}
-      <h3 class="title">${esc(b.title)}</h3>
+      <h3 class="title">${esc(title)}</h3>
       ${b.tagline ? `<div class="tagline">${esc(b.tagline)}</div>` : ''}
       ${badgesHtml(b)}
       <div class="prices">${priceHtml(b, t)}</div>
@@ -694,8 +713,8 @@ function renderShelf() {
   if (xl.length) {
     const xs = S.xs || {};
     const dl = xs.deadline ? `<b>${esc(fmtDeadline(xs.deadline))} 截止</b>・` : '';
-    out += `<div class="sec xm" id="xsec"><span class="lbl">🎄 聖誕</span><h2>${esc(xs.title || '聖誕選書團購')}</h2><span>預購</span></div>
-      <div class="xnote">${xs.isOpen ? '' : '<b>聖誕團購已截止</b>・'}${dl}團購優惠價，到貨後統一出貨。和現貨一起結帳時，會自動分成「現貨單」和「聖誕團購單」兩張。</div>
+    out += `<div class="sec xm" id="xsec"><span class="lbl">🎄 聖誕</span><h2>${esc(xs.title || '聖誕選書團購')}</h2></div>
+      <div class="xnote">${xs.isOpen ? '' : '<b>聖誕團購已截止</b>・'}${dl}團購優惠價，可以和現貨一起結帳。</div>
       <div class="grid">${xl.map(cardHtml).join('')}</div>`;
   }
   if (!out) out = `<div class="empty">找不到符合的書，換個關鍵字或清除篩選看看。<br><br><button class="btn ghost" data-act="clear">清除篩選</button></div>`;
@@ -709,8 +728,8 @@ function renderCart() {
   const both = ts.qty && tx.qty;
   $('#cartsum').innerHTML = qty
     ? `<div>已選 <b class="num" style="color:inherit;font-size:15px">${qty}</b> 本　<b class="num">${money(total)}</b></div>` +
-      (both ? `<div class="sub">📚 現貨 ${ts.qty} 本＋🎄 聖誕 ${tx.qty} 本（分兩張單）</div>`
-        : tx.qty ? `<div class="sub">🎄 聖誕團購（預購）${tx.discount ? '・已折 ' + money(tx.discount) : ''}</div>` : '')
+      (both ? `<div class="sub">📚 現貨 ${ts.qty} 本＋🎄 聖誕 ${tx.qty} 本${tx.discount ? '・已折 ' + money(tx.discount) : ''}</div>`
+        : tx.qty ? `<div class="sub">🎄 聖誕團購${tx.discount ? '・已折 ' + money(tx.discount) : ''}</div>` : '')
     : `<span class="hint">${S.settings && !S.settings.isOpen ? '現貨書櫃暫停下單中' : '還沒選書，按 ＋ 加入'}</span>`;
   $('#checkoutBtn').disabled = !qty;
   $('#checkoutBtn').textContent = S.editing ? '確認修改' : '填寫資料';
@@ -721,7 +740,7 @@ function renderBanners() {
   const st = S.settings, out = [];
   if (DEMO_MODE) out.push(`<div class="banner demo">👀 <span>預覽模式：訂單只會存在這台裝置，不會真的送出。</span></div>`);
   if (!st.isOpen) out.push(`<div class="banner closed">⛔ 現貨書櫃暫停下單中。已下單的朋友可以到「查詢訂單」確認內容。</div>`);
-  if (S.editing) out.push(`<div class="banner edit">✏️ <span>正在修改${esc(KIND[S.editing.type].name)}訂單 <b>${esc(S.editing.orderId)}</b>，調整數量後按「確認修改」。${S.editing.type === 'stock' ? '這時加入的聖誕書' : '這時加入的現貨書'}會另外開一張新單。</span><button class="link" id="quitEdit">放棄修改</button></div>`);
+  if (S.editing) out.push(`<div class="banner edit">✏️ <span>正在修改訂單 <b>${esc(S.editing.orderId)}</b>，調整數量後按「確認修改」。現貨書和聖誕書都可以加進這張單。</span><button class="link" id="quitEdit">放棄修改</button></div>`);
   if (st.notice) out.push(`<div class="banner notice">${esc(st.notice)}</div>`);
   $('#banners').innerHTML = out.join('');
   const q = $('#quitEdit'); if (q) q.onclick = quitEdit;
@@ -768,7 +787,6 @@ document.addEventListener('click', e => {
     const q = Math.max(0, Math.min(maxFor(b), (S.cart[id] || 0) + Number(stepBtn.dataset.d)));
     if (q) S.cart[id] = q; else delete S.cart[id];
     if (Number(stepBtn.dataset.d) > 0 && q >= maxFor(b) && b.remaining != null && q < (setOf(b.kind).perMax||10)) toast('這本書只剩這些囉');
-    if (Number(stepBtn.dataset.d) > 0 && q === 1 && isX(b) && !Object.keys(S.cart).some(k => kindOf(k) === 'xmas' && k !== id)) toast('🎄 聖誕團購書是預購，會另外開一張單');
     renderShelf(); renderCart(); return;
   }
   const det = e.target.closest('[data-detail]');
@@ -810,16 +828,15 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#overl
 function openDetail(id) {
   const b = S.byId[id], k = ageKey(b), t = targetOf(b);
   const r = t || b;
-  const stockTxt = isOut(r) ? '已售完' : r.remaining != null && r.remaining <= 3 ? `剩 ${r.remaining} 本` : isX(b) ? '團購預購' : '有現貨';
+  const stockTxt = isOut(r) ? '已售完' : r.remaining != null && r.remaining <= 3 ? `剩 ${r.remaining} 本` : isX(b) ? '聖誕團購' : '有現貨';
   const kv = [pubName(b) !== '其他' ? b.publisher : '', isX(b) ? b.category : '', b.age || '', stockTxt, ...(isX(b) ? b.xtags : (b.tags || []))].filter(Boolean);
   openSheet('書籍介紹', `<div class="detail ${isX(b)?'xm':''}" style="--c:${ageColor(k)}">
     <div class="bigc">${b.cover ? `<img src="${esc(b.cover)}" alt="${esc(b.title)} 封面">` : `<div class="cover" style="position:absolute;inset:0;aspect-ratio:auto;background:none;border:0"><div class="ph" style="font-size:22px">${esc(b.title)}</div></div>`}<span class="code">${esc(b.id)}</span></div>
-    <h3 class="title" style="font-size:18px">${esc(b.title)}</h3>
+    <h3 class="title" style="font-size:18px">${esc(titleOf(b))}</h3>
     ${b.tagline ? `<div class="tagline">${esc(b.tagline)}</div>` : ''}
     ${b.desc ? `<p class="desc">${esc(b.desc)}</p>` : ''}
     <div class="kv">${kv.map(x => `<span>${esc(x)}</span>`).join('')}</div>
     <div class="prices">${priceHtml(b, t)}</div>
-    ${isX(r) ? '<div class="hint">🎄 聖誕團購是預購，到貨後統一出貨；和現貨一起結帳會分成兩張單。</div>' : ''}
     ${t && isOut(t) ? SOLD_HTML : ''}
   </div>`);
 }
@@ -838,17 +855,14 @@ function totRows(t, label) {
   return `<div class="tot">${t.discount ? `<div class="ln"><span class="t">小計</span><span class="a num">${money(t.subtotal)}</span></div><div class="ln disc"><span class="t">滿額優惠</span><span class="a num">−${money(t.discount)}</span></div>` : ''}
     <div class="ln big"><span class="t">${label}</span><span class="a num">${money(t.total)}</span></div></div>`;
 }
+// 現貨書、聖誕書分開列，但合起來是同一張單、一個應付金額
 function orderBoxHtml(g) {
   const kinds = ['stock','xmas'].filter(k => g[k].length);
-  const parts = kinds.map(k => {
-    const t = totalsOf(k, g[k]);
-    const ed = S.editing && S.editing.type === k ? `・修改 ${esc(S.editing.orderId)}` : '';
-    return `<div class="grp ${k==='xmas'?'xg':''}"><h4><span class="lbl">${KIND[k].label}</span><small>${KIND[k].note}${ed}</small></h4>
-      <div class="lines">${lineRows(g[k])}</div>${totRows(t, `共 ${t.qty} 本・${kinds.length > 1 ? KIND[k].name + '應付' : '應付金額'}`)}</div>`;
-  }).join('');
-  const grand = kinds.length > 1 ? `<div class="grand"><span>兩張單合計</span><span class="a num">${money(kinds.reduce((a,k) => a + totalsOf(k, g[k]).total, 0))}</span></div>
-    <div class="hint" style="margin-top:6px">送出後會分成「現貨單」和「聖誕團購單」兩張，出貨時間不同，付款也分開計算。</div>` : '';
-  return `<div class="box"><h3>訂購內容</h3>${parts}${grand}</div>`;
+  const parts = kinds.map(k => `<div class="grp ${k==='xmas'?'xg':''}"><h4><span class="lbl">${KIND[k].label}</span></h4>
+      <div class="lines">${lineRows(g[k])}</div></div>`).join('');
+  const t = totalsAll(g);
+  const ed = S.editing ? `<div class="hint" style="margin:0 0 6px">✏️ 修改訂單 ${esc(S.editing.orderId)}</div>` : '';
+  return `<div class="box"><h3>訂購內容</h3>${ed}${parts}${totRows(t, `共 ${t.qty} 本・應付金額`)}</div>`;
 }
 
 $('#checkoutBtn').onclick = () => {
@@ -856,7 +870,6 @@ $('#checkoutBtn').onclick = () => {
   S.done = [];
   const saved = S.editing ? S.editing.form : store.get(PROFILE_KEY, {});
   const v = k => esc(saved[k] || '');
-  const two = g.stock.length && g.xmas.length;
   openSheet(S.editing ? '確認修改' : '填寫訂購資料', `
     ${orderBoxHtml(g)}
     <form class="box form" id="orderForm" novalidate>
@@ -865,17 +878,17 @@ $('#checkoutBtn').onclick = () => {
         ${FIELDS.map(([k,l,t,ac,ph]) => `<div class="field" data-f="${k}"><label for="f_${k}">${l} <span class="req">*</span></label>
           <input id="f_${k}" name="${k}" type="${t}" ${t==='tel'?'inputmode="numeric"':''} autocomplete="${ac}" ${k==='lineId'?'autocapitalize="off"':''} placeholder="${ph}" value="${v(k)}"><div class="msg"></div></div>`).join('')}
       </div>
-      <div class="field"><label for="f_note">備註</label><textarea id="f_note" name="note" rows="2" placeholder="想跟團主說的話（選填）">${S.editing ? v('note') : ''}</textarea></div>
+      <div class="field"><label for="f_note">備註</label><textarea id="f_note" name="note" rows="2" placeholder="想跟團主說的話（選填）">${v('note')}</textarea></div>
       <div class="hp" aria-hidden="true"><input id="f_website" name="website" tabindex="-1" autocomplete="off"></div>
       <div id="formErr"></div>
-      <button class="btn block" type="submit" id="submitBtn">${submitLabel(two)}</button>
+      <button class="btn block" type="submit" id="submitBtn">${submitLabel()}</button>
       <div class="hint" style="text-align:center">送出後可以在「查詢訂單」用電話和 LINE 名稱 修改或取消</div>
     </form>`);
   const form = $('#orderForm');
-  form.addEventListener('input', () => { if (!S.editing) store.set(PROFILE_KEY, Object.assign(readForm(form), { note: '' })); });
+  form.addEventListener('input', () => { if (!S.editing) store.set(PROFILE_KEY, readForm(form)); });
   form.addEventListener('submit', e => { e.preventDefault(); submitOrder(form); });
 };
-function submitLabel(two) { return S.editing ? '送出修改' : two ? '送出訂單（分兩張）' : '送出訂單'; }
+function submitLabel() { return S.editing ? '送出修改' : '送出訂單'; }
 
 function readForm(form) {
   const o = {}; ['name','nick','lineId','phone','note','website'].forEach(k => o[k] = (form.elements[k]?.value || '').trim()); return o;
@@ -889,16 +902,13 @@ function validate(o) {
   if (!/^09\d{8}$/.test(ph)) err.phone = '請填 09 開頭的 10 碼手機號碼';
   return err;
 }
-/* 把送出成功的那一類書從購物車拿掉 */
-function finishKind(kind, order, wasEdit) {
-  S.done.push({ kind, order: Object.assign({ kind }, order), wasEdit });
-  Object.keys(S.cart).forEach(id => { if (kindOf(id) === kind) delete S.cart[id]; });
-  if (S.editing && S.editing.type === kind) S.editing = null;
-  store.set(CART_KEY, S.editing ? {} : S.cart);
+/* 送出成功：整台購物車清空 */
+function finishOrder(order, wasEdit) {
+  S.done = [{ kind: order.kind || 'stock', order: Object.assign({ kind: order.kind || 'stock' }, order), wasEdit }];
+  S.cart = {}; S.editing = null;
+  store.set(CART_KEY, {});
 }
-function doneNote() {
-  return S.done.length ? `<div class="formok" style="margin-bottom:8px">✅ ${S.done.map(d => KIND[d.kind].name + '單 ' + esc(d.order.id)).join('、')} 已送出成功，剩下的書請再按一次送出。</div>` : '';
-}
+// 現貨書、聖誕書一起送，只開一張單
 async function submitOrder(form) {
   const o = readForm(form), err = validate(o);
   form.querySelectorAll('.field[data-f]').forEach(f => { const k = f.dataset.f; f.classList.toggle('err', !!err[k]); f.querySelector('.msg').textContent = err[k] || ''; });
@@ -906,70 +916,64 @@ async function submitOrder(form) {
   if (Object.keys(err).length) { form.querySelector('.field.err input')?.focus(); return; }
   const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = '送出中…';
   const phone = o.phone.replace(/\D/g,'');
-  const g = cartGroups();
-  for (const kind of ['stock', 'xmas']) {
-    if (!g[kind].length) continue;
-    const payload = { order: Object.assign({}, o, { phone, items: g[kind].map(l => ({ id: l.id, qty: l.qty })) }) };
-    const editing = S.editing && S.editing.type === kind;
-    if (editing) payload.edit = { orderId: S.editing.orderId, phone: S.editing.phone, lineId: S.editing.lineId };
-    const r = await api('submit', payload, kind);
-    if (!r.ok) {
-      btn.disabled = false; btn.textContent = submitLabel(false);
-      const both = g.stock.length && g.xmas.length;
-      $('#formErr').innerHTML = doneNote() + `<div class="formerr">${both || S.done.length ? '【' + KIND[kind].name + '】' : ''}${esc(r.error || '送出失敗，請再試一次')}</div>`;
-      if (r.code === 'DUPLICATE') {
-        $('#formErr').insertAdjacentHTML('beforeend', `<button type="button" class="btn navy block" id="mergeBtn" style="margin-top:8px">➕ 把這次選的${KIND[kind].name}書加到原訂單 ${esc(r.dupId || '')}</button>
-          <div class="hint" style="text-align:center">原訂單付款後，就可以另外下「追加單」</div>`);
-        $('#mergeBtn').onclick = () => mergeIntoOrder(kind, o, phone, r.dupId, form);
-      }
-      if (r.code === 'STOCK') reloadCatalog();
-      renderCart();
-      return;
+  const payload = { order: Object.assign({}, o, { phone, items: cartLines().map(l => ({ id: l.id, qty: l.qty })) }) };
+  const wasEdit = !!S.editing;
+  if (wasEdit) payload.edit = { orderId: S.editing.orderId, phone: S.editing.phone, lineId: S.editing.lineId };
+  const r = await api('submit', payload);
+  if (!r.ok) {
+    btn.disabled = false; btn.textContent = submitLabel();
+    $('#formErr').innerHTML = `<div class="formerr">${esc(r.error || '送出失敗，請再試一次')}</div>`;
+    if (r.code === 'DUPLICATE') {
+      $('#formErr').insertAdjacentHTML('beforeend', `<button type="button" class="btn navy block" id="mergeBtn" style="margin-top:8px">➕ 把這次選的書加到原訂單 ${esc(r.dupId || '')}</button>
+        <div class="hint" style="text-align:center">原訂單付款後，就可以另外下「追加單」</div>`);
+      $('#mergeBtn').onclick = () => mergeIntoOrder(o, phone, r.dupId);
     }
-    finishKind(kind, r.order, editing);
+    if (r.code === 'STOCK') reloadCatalog();
+    renderCart();
+    return;
   }
+  finishOrder(r.order, wasEdit);
   store.set(PROFILE_KEY, Object.assign(readForm(form), { note: '' }));
   showDone();
   reloadCatalog();
 }
 
-/* 重複下單時：直接把這次選的書併進同類型、還沒付款的原訂單，再繼續送出另一類 */
-async function mergeIntoOrder(kind, o, phone, orderId, form) {
+/* 重複下單時：把這次選的書（現貨、聖誕都可以）直接併進還沒付款的原訂單 */
+async function mergeIntoOrder(o, phone, orderId) {
   const btn = $('#mergeBtn'); btn.disabled = true; btn.textContent = '合併中…';
-  const r = await api('lookup', { phone, lineId: o.lineId }, kind);
-  const old = r.ok && r.orders.find(x => x.id === orderId && x.status === '有效' && !x.paid);
+  const r = await api('lookup', { phone, lineId: o.lineId });
+  const old = r.ok && r.orders.find(x => x.id === orderId && x.status === '有效' && !x.paid && !x.locked);
   if (!old) {
     btn.disabled = false; btn.textContent = '➕ 把這次選的書加到原訂單';
-    $('#formErr').innerHTML = doneNote() + `<div class="formerr">找不到原訂單 ${esc(orderId || '')}。如果 LINE 名稱 和上次填的不一樣，請到「查詢訂單」用上次的名稱查詢後按「修改／加書」。</div>`;
+    $('#formErr').innerHTML = `<div class="formerr">找不到原訂單 ${esc(orderId || '')}。如果 LINE 名稱 和上次填的不一樣，請到「查詢訂單」用上次的名稱查詢後按「修改／加書」。</div>`;
     return;
   }
   const items = {};
   old.items.forEach(i => items[i.id] = (items[i.id] || 0) + i.qty);
-  cartGroups()[kind].forEach(l => items[l.id] = (items[l.id] || 0) + l.qty);
+  cartLines().forEach(l => items[l.id] = (items[l.id] || 0) + l.qty);
   const payload = { order: Object.assign({}, o, { phone, items: Object.entries(items).map(([id, qty]) => ({ id, qty })) }),
     edit: { orderId: old.id, phone, lineId: o.lineId } };
-  const s = await api('submit', payload, kind);
+  const s = await api('submit', payload);
   if (!s.ok) {
     btn.disabled = false; btn.textContent = '➕ 再試一次';
-    $('#formErr').innerHTML = doneNote() + `<div class="formerr">【${KIND[kind].name}】${esc(s.error || '合併失敗，請再試一次')}</div>`;
+    $('#formErr').innerHTML = `<div class="formerr">${esc(s.error || '合併失敗，請再試一次')}</div>`;
     if (s.code === 'STOCK') reloadCatalog();
     return;
   }
-  finishKind(kind, s.order, true);
-  const g = cartGroups();
-  if (g.stock.length || g.xmas.length) { renderCart(); return submitOrder(form); }   // 還有另一類的書，繼續送
-  store.set(PROFILE_KEY, Object.assign(readForm(form), { note: '' }));
+  finishOrder(s.order, true);
+  store.set(PROFILE_KEY, Object.assign(o, { note: '' }));
   showDone();
   reloadCatalog();
 }
 
 function summaryText(o) {
   const kind = o.kind || kindOf(o.id);
-  const head = kind === 'xmas' ? `🎄 ${(S.xs && S.xs.title) || '聖誕選書團購'}｜${o.id}` : `📚 ${S.settings.title}｜${o.id}`;
-  const lines = o.items.map(i => `・${i.id} ${i.title} ×${i.qty}　${money(i.price*i.qty)}`).join('\n');
+  const head = kind === 'xmas' ? `🎄 ${(S.xs && S.xs.title) || '聖誕選書團購'}｜${o.id}`
+    : kind === 'mix' ? `📚🎄 ${S.settings.title}｜${o.id}` : `📚 ${S.settings.title}｜${o.id}`;
+  // 摘要格式和聖誕書櫃（index.html）一樣；合併單的聖誕書前面加 🎄
+  const lines = o.items.map(i => `・${kind === 'mix' && kindOf(i.id) === 'xmas' ? '🎄' : ''}${i.title} ×${i.qty}　${money(i.price*i.qty)}`).join('\n');
   return `${head}\n暱稱：${o.nick}\n${lines}\n` +
-    (o.discount ? `小計 ${money(o.subtotal)}｜滿額折 ${money(o.discount)}\n` : '') +
-    `共 ${o.qty} 本｜應付 ${money(o.total)}` +
+    `共 ${o.qty} 本｜應付 ${money(o.total)}${o.discount ? `（已折 ${money(o.discount)}）` : ''}` +
     (o.addonOf ? `\n📌 ${o.addonOf}` : '');
 }
 function showDone() {
@@ -980,9 +984,8 @@ function showDone() {
   openSheet(allEdit ? '修改完成' : '下單成功', `<div class="done">
     <p class="big">${allEdit ? '訂單已更新 ✏️' : '謝謝你的訂購 📚'}</p>
     <div class="oids">${done.map(d => `<span class="oid ${d.kind==='xmas'?'xm':''}">${KIND[d.kind].label} ${esc(d.order.id)}</span>`).join('')}</div>
-    ${done.length > 1 ? '<p class="hint" style="margin:6px 0 0">分成兩張單：現貨確認後就出貨；聖誕團購到貨後統一出貨</p>' : ''}
     ${addon.map(d => `<p class="hint" style="margin:6px 0 0">📌 ${esc(d.order.id)} 是${esc(d.order.addonOf)}，請另外付這張的款項</p>`).join('')}
-    <p class="hint" style="margin:6px 0 0">把下面的摘要複製貼回 LINE 群，團主就能快速確認</p>
+    <p class="hint" style="margin:6px 0 0">把下面的摘要複製，貼到 SYY 官方 LINE：<a href="${LINE_OA}" target="_blank" rel="noopener">@970xwzkg</a>，團主就能快速確認</p>
     <pre class="summary" id="sumText">${esc(text)}</pre>
     <button class="btn navy block" id="copyBtn">📋 複製訂單摘要</button>
     <button class="btn ghost block" id="doneBtn">繼續逛逛</button>
@@ -1007,16 +1010,18 @@ $('#lookupForm').addEventListener('submit', async e => {
 async function doLookup() {
   const out = $('#lookupResult'), btn = $('#lkBtn');
   btn.disabled = true; btn.textContent = '查詢中…';
-  const [a, b] = await Promise.all([api('lookup', S.lookup, 'stock'), api('lookup', S.lookup, 'xmas')]);
+  // 現貨單、聖誕單、合併單一次查出來
+  const a = await api('lookup', S.lookup);
   btn.disabled = false; btn.textContent = '查詢訂單';
-  if (!a.ok || !b.ok) { out.innerHTML = `<div class="formerr">${esc((!a.ok ? a : b).error)}</div>`; return; }
-  const orders = a.orders.map(o => Object.assign({ kind:'stock' }, o)).concat(b.orders.map(o => Object.assign({ kind:'xmas' }, o)))
+  if (!a.ok) { out.innerHTML = `<div class="formerr">${esc(a.error)}</div>`; return; }
+  const orders = a.orders.map(o => Object.assign({}, o, { kind: o.kind || kindOf(o.id) }))
     .sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
   if (!orders.length) { out.innerHTML = '<p class="empty">找不到訂單。請確認電話和 LINE 名稱 是否和下單時一樣。</p>'; return; }
   S.lookupOrders = orders;
   out.innerHTML = orders.map(o => {
-    const st = setOf(o.kind);
-    const active = o.status === '有效', canEdit = active && !o.paid && st && st.isOpen;
+    // 合併單：現貨或聖誕任一邊還開放就能改（已截止那邊的書不能加減，後台會擋）
+    const st = o.kind === 'mix' ? { isOpen: !!((S.settings && S.settings.isOpen) || (S.xs && S.xs.isOpen)) } : setOf(o.kind);
+    const active = o.status === '有效', canEdit = active && !o.paid && !o.locked && st && st.isOpen;
     return `<div class="order ${o.kind==='xmas'?'xm':''}">
       <div class="ohead"><b>${esc(o.id)}</b>
         <span class="pill ${o.kind==='xmas'?'kx':'k'}">${KIND[o.kind].label}</span>
@@ -1026,6 +1031,7 @@ async function doLookup() {
       ${totRows(o, '應付金額')}
       ${canEdit ? `<div class="oacts"><button class="btn navy" data-edit="${esc(o.id)}">修改／加書</button><button class="btn ghost" data-cancel="${esc(o.id)}">取消訂單</button></div>`
         : active && o.paid ? `<div class="hint">已付款的訂單不能修改。${st && st.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單。' : '如需調整請私訊團主。'}</div>`
+        : active && o.locked ? `<div class="hint">🔒 ${esc(o.lockReason)}，不能自己修改或取消。${st && st.isOpen ? '想再買其他書，直接回「選書」再下一張就會變成追加單；' : ''}要減書或取消請私訊團主。</div>`
         : active && !(st && st.isOpen) ? `<div class="hint">${o.kind==='xmas' ? '聖誕團購已截止' : '現貨書櫃暫停下單中'}，如需調整請私訊團主。</div>` : ''}
       ${active ? `<button class="btn ghost" data-copy="${esc(o.id)}" style="justify-self:start;padding:8px 14px;font-size:13.5px">📋 複製摘要</button>` : ''}
     </div>`;
@@ -1040,7 +1046,7 @@ $('#lookupResult').addEventListener('click', async e => {
     if (cc.dataset.sure !== '1') { cc.dataset.sure = '1'; cc.textContent = '確定要取消？再按一次'; cc.style.borderColor = 'var(--accent)'; cc.style.color = 'var(--accent)'; return; }
     const o = S.lookupOrders.find(x => x.id === cc.dataset.cancel);
     cc.disabled = true; cc.textContent = '取消中…';
-    const r = await api('cancel', Object.assign({ orderId: o.id }, S.lookup), o.kind);
+    const r = await api('cancel', Object.assign({ orderId: o.id }, S.lookup));
     if (!r.ok) { toast(r.error); cc.disabled = false; cc.textContent = '取消訂單'; return; }
     toast('訂單已取消'); doLookup(); reloadCatalog();
   }
