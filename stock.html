@@ -305,6 +305,14 @@ section.hot::before{display:none}
   -webkit-mask:radial-gradient(circle 3px at 3px 50%,#0000 98%,#000) -3px 0/100% 9px repeat-y,linear-gradient(#000 0 0);
   -webkit-mask-composite:source-in;mask-composite:intersect}
 .hotchip.on{background:var(--accent);color:#fff;outline-color:rgba(255,255,255,.5)}
+/* 熱購區分兩排：主題（郵票）／出版社（圓角膠囊） */
+.hotrow{display:flex;align-items:center;gap:10px}
+.hotrow+.hotrow{margin-top:10px}
+.hot-l{flex:none;width:3.6em;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+.hotrow .hotchips{flex:1}
+.pubchip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 15px;font-weight:500;letter-spacing:.06em}
+.pubchip::before{content:"📖";font-size:12px;margin-right:5px}
+.pubchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 /* 分段標題 */
 .sec{border-bottom:1px solid rgba(140,122,105,.45);margin-top:32px}
@@ -447,6 +455,7 @@ const DEMO = {
     open:true, isOpen:true, deadline:'', threshold:0, rate:0, minus:0, perMax:10 },
   xsettings: { title:'SYY聖誕選書團購', notice:'', open:true, isOpen:true, deadline:'', threshold:0, rate:0, minus:0, perMax:10 },
   featured: ['聖誕','得獎經典','情緒','五味太郎','翻翻書','外文書'],
+  featuredPubs: ['禾流','信誼','采實','球球館','小魯'],
   books: [
     ["SA01", "小波在哪裡？", "上誼", "0–2 歲", 221, 7, "掀開翻頁找小波，躲貓貓好好玩", "翻翻書、硬頁書", 0],
     ["SA02", "小波的生日派對", "上誼", "0–2 歲", 245, 5, "經典翻翻書，掀開有驚喜", "翻翻書、硬頁書", 0],
@@ -519,7 +528,7 @@ const DEMO = {
 const S = {
   settings: null,      // 現貨設定
   xs: null,            // 聖誕團購設定（讀不到時為 null，聖誕區不顯示）
-  books: [], xbooks: [], byId: {}, featured: [],
+  books: [], xbooks: [], byId: {}, featured: [], featuredPubs: [],
   cart: {},            // {書號: 數量}；S 開頭＝現貨、B 開頭＝聖誕
   editing: null,       // {type, orderId, phone, lineId, prev:{書號:數量}, form}
   q: '', age: 'all', tags: new Set(), pub: '', panel: '', inStock: false,
@@ -569,7 +578,7 @@ function demoApi(action, p, type) {
       const list = type === 'xmas' ? DEMO.xbooks : DEMO.books;
       const books = list.map(b => Object.assign({}, b, { remaining: left(b, sd) }));
       resolve(type === 'xmas' ? { ok:true, settings: DEMO.xsettings, books }
-        : { ok:true, settings: DEMO.settings, featured: DEMO.featured, books });
+        : { ok:true, settings: DEMO.settings, featured: DEMO.featured, featuredPubs: DEMO.featuredPubs, books });
     } else if (action === 'submit') {
       const o = p.order, ed = p.edit;
       let existing = ed ? orders.find(x => x.id === ed.orderId) : null;
@@ -716,8 +725,16 @@ function renderFilters() {
   if (S.xbooks.length) h += S.age === 'X'
     ? `<button class="xpromo back" data-act="age" data-k="all"><span class="go">← 返回現貨書櫃</span><span class="ic">🎄</span><span><b>${fillText(siteText('xpromoTitle'))}</b></span></button>`
     : `<button class="xpromo" data-act="age" data-k="X"><span class="ic">🎄</span><span><b>${fillText(siteText('xpromoTitle'))}</b><span>${fillText(siteText('xpromoText'))}${S.xs && S.xs.deadline ? '・' + esc(fmtDeadline(S.xs.deadline)) + ' 截止' : ''}</span></span><span class="go">去看看 →</span></button>`;
-  if (hot.length) h += `<section class="hot"><div class="hot-h">SYY 社群熱購推薦</div><div class="hotchips">` +
-    hot.map(t => `<button class="hotchip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}</button>`).join('') + `</div></section>`;
+  // 熱門出版社：設定裡寫「禾流」也能對到書單的「禾流文創」；沒有書的不顯示，按鈕上顯示設定裡寫的名字
+  const pubSet = new Set(pubs.map(([p]) => p)), seen = new Set();
+  const hotPubs = (S.featuredPubs || []).map(p => [p, PUB_ALIAS[p] || p])
+    .filter(([, k]) => pubSet.has(k) && !seen.has(k) && seen.add(k));
+  if (hot.length || hotPubs.length) h += `<section class="hot"><div class="hot-h">SYY 社群熱購推薦</div>` +
+    (hot.length ? `<div class="hotrow"><span class="hot-l">主題</span><div class="hotchips">` +
+      hot.map(t => `<button class="hotchip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}</button>`).join('') + `</div></div>` : '') +
+    (hotPubs.length ? `<div class="hotrow"><span class="hot-l">出版社</span><div class="hotchips">` +
+      hotPubs.map(([label, k]) => `<button class="pubchip ${S.pub===k?'on':''}" data-act="pub" data-p="${esc(k)}" aria-pressed="${S.pub===k}">${esc(label)}</button>`).join('') + `</div></div>` : '') +
+    `</section>`;
   const more = [...tagC.entries()].filter(([t]) => !hot.includes(t));
   const nt = [...S.tags].filter(t => !hot.includes(t)).length;
   h += `<div class="frow">` +
@@ -1136,7 +1153,7 @@ function normX(b) {
 async function reloadCatalog() {
   const [r, x] = await Promise.all([api('catalog', {}, 'stock'), api('catalog', {}, 'xmas')]);
   if (!r.ok) { $('#shelf').innerHTML = `<p class="empty">${esc(r.error || '書單載入失敗')}，請重新整理頁面</p>`; return false; }
-  S.settings = r.settings; S.featured = r.featured || []; S.byId = {};
+  S.settings = r.settings; S.featured = r.featured || []; S.featuredPubs = r.featuredPubs || []; S.byId = {};
   S.books = (r.books || []).map(b => Object.assign({}, b, { kind:'stock' }));
   // 聖誕書單讀不到時，現貨書櫃照常運作，只是不顯示聖誕區
   S.xs = x.ok ? x.settings : null;
