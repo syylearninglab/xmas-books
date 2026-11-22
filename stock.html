@@ -174,6 +174,7 @@ section.hot::before{content:"";position:absolute;right:16px;top:-1px;width:14px;
 .list{color:var(--muted);text-decoration:line-through;font-size:13px}
 .twin{font-size:11.5px;font-weight:700;color:var(--x-pine);background:var(--x-soft);border-radius:4px;padding:1px 6px}
 .ask{font-size:13px;font-weight:700;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:6px;padding:6px 10px;text-align:center;width:100%}
+.ask a{color:#06C755;text-decoration:underline;white-space:nowrap}
 
 .stepper{display:flex;align-items:center;justify-content:space-between;margin-top:8px;border:1.5px solid var(--line);border-radius:8px;padding:3px}
 .stepper button{width:36px;height:36px;border-radius:6px;border:0;background:var(--navy-soft);color:var(--navy);font-size:20px;font-weight:700;line-height:1}
@@ -682,7 +683,7 @@ function flagHtml(b, t) {
   return '';
 }
 function priceHtml(b, t) {
-  if (!t) return '<span class="ask">價格確認中・私訊詢價</span>';
+  if (!t) return `<span class="ask">私訊SYY官方LINE <a href="${LINE_OA}" target="_blank" rel="noopener">@970xwzkg</a> 詢優惠價🥰</span>`;
   const p = `<span class="price num"><small>$</small>${t.price}</span>`;
   if (t !== b) return p + '<span class="twin">🎄 聖誕團購價</span>';
   return p + (isX(b) && b.list > b.price ? `<span class="list num">$${b.list}</span>` : '');
