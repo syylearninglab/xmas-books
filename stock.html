@@ -306,9 +306,9 @@ section.hot::before{display:none}
   -webkit-mask-composite:source-in;mask-composite:intersect}
 .hotchip.on{background:var(--accent);color:#fff;outline-color:rgba(255,255,255,.5)}
 /* 熱購區分兩排：主題（郵票）／出版社（圓角膠囊） */
-.hotrow{display:flex;align-items:center;gap:10px}
+.hotrow{display:flex;align-items:flex-start;gap:10px}
 .hotrow+.hotrow{margin-top:10px}
-.hot-l{flex:none;width:3.6em;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+.hot-l{flex:none;width:3.6em;font-size:12px;letter-spacing:.1em;color:var(--muted);padding-top:9px}
 .hotrow .hotchips{flex:1}
 .pubchip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 15px;font-weight:500;letter-spacing:.06em}
 .pubchip::before{content:"📖";font-size:12px;margin-right:5px}
@@ -736,9 +736,9 @@ function renderFilters() {
       hotPubs.map(([label, k]) => `<button class="pubchip ${S.pub===k?'on':''}" data-act="pub" data-p="${esc(k)}" aria-pressed="${S.pub===k}">${esc(label)}</button>`).join('') + `</div></div>` : '') +
     `</section>`;
   const more = [...tagC.entries()].filter(([t]) => !hot.includes(t));
-  const nt = [...S.tags].filter(t => !hot.includes(t)).length;
+  const nt = [...S.tags].find(t => !hot.includes(t));   // 選的是下拉選單裡的主題時，按鈕直接顯示它
   h += `<div class="frow">` +
-    (more.length ? `<button class="drop ${S.panel==='tag'?'open':''} ${nt?'has':''}" data-act="panel" data-p="tag">更多主題${nt?' · '+nt:''} <i>▼</i></button>` : '') +
+    (more.length ? `<button class="drop ${S.panel==='tag'?'open':''} ${nt?'has':''}" data-act="panel" data-p="tag">${nt ? esc(nt) : '更多主題'} <i>▼</i></button>` : '') +
     `<button class="drop ${S.panel==='pub'?'open':''} ${S.pub?'has':''}" data-act="panel" data-p="pub">${S.pub ? esc(S.pub) : '出版社'} <i>▼</i></button>` +
     `<button class="chip dash ${S.inStock?'on':''}" data-act="instock" aria-pressed="${S.inStock}">只看有貨</button></div>`;
   if (S.panel === 'tag') h += `<div class="panel"><div class="chipwrap">${more.map(([t]) => `<button class="chip ${S.tags.has(t)?'on':''}" data-act="tag" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>`;
@@ -855,7 +855,11 @@ document.addEventListener('click', e => {
   if (a) {
     const act = a.dataset.act;
     if (act === 'age') { S.age = a.dataset.k; if (a.classList.contains('xpromo')) setTimeout(() => $('#ages').scrollIntoView({ behavior:'smooth', block:'start' }), 0); }
-    else if (act === 'tag') { const t = a.dataset.t; S.tags.has(t) ? S.tags.delete(t) : S.tags.add(t); }
+    else if (act === 'tag') {   // 主題一次只選一個（和出版社一樣）：點同一個＝取消，點別的＝換過去
+      const t = a.dataset.t, was = S.tags.has(t);
+      S.tags.clear(); if (!was) S.tags.add(t);
+      S.panel = '';
+    }
     else if (act === 'panel') S.panel = S.panel === a.dataset.p ? '' : a.dataset.p;
     else if (act === 'pub') { S.pub = S.pub === a.dataset.p ? '' : a.dataset.p; S.panel = ''; }   // 選了自動收合
     else if (act === 'unpub') S.pub = '';
